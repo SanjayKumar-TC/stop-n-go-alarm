@@ -3,9 +3,10 @@ import { HomeScreen } from '@/components/HomeScreen';
 import { MapView } from '@/components/MapView';
 import { ControlPanel } from '@/components/ControlPanel';
 import { StatusBar } from '@/components/StatusBar';
+import { SettingsScreen } from '@/components/SettingsScreen';
 import { Map } from '@/components/Map';
 import { useGeolocation, calculateDistance } from '@/hooks/useGeolocation';
-import { useAlarm } from '@/hooks/useAlarm';
+import { useAlarm, AlarmSettings } from '@/hooks/useAlarm';
 import { useToast } from '@/hooks/use-toast';
 
 interface Destination {
@@ -14,30 +15,37 @@ interface Destination {
   name?: string;
 }
 
-type ViewMode = 'home' | 'map' | 'tracking';
+type ViewMode = 'home' | 'map' | 'tracking' | 'settings';
 
 const Index = () => {
   const [destination, setDestination] = useState<Destination | null>(null);
-  const [alertRadius, setAlertRadius] = useState(1000); // 1km default
+  const [alertRadius, setAlertRadius] = useState(1000);
   const [distanceToDestination, setDistanceToDestination] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('home');
   
   const { toast } = useToast();
   const { position, error, isLoading, startWatching, stopWatching, requestPosition } = useGeolocation();
-  const { isActive: isAlarmActive, isRinging: isAlarmRinging, triggerAlarm, stopAlarm, activateAlarm, deactivateAlarm } = useAlarm();
+  const { 
+    isActive: isAlarmActive, 
+    isRinging: isAlarmRinging, 
+    settings: alarmSettings,
+    updateSettings: updateAlarmSettings,
+    triggerAlarm, 
+    stopAlarm, 
+    activateAlarm, 
+    deactivateAlarm,
+    testAlarm,
+  } = useAlarm();
 
-  // Current position in simple format
   const currentPosition = position
     ? { lat: position.coords.latitude, lng: position.coords.longitude }
     : null;
 
-  // Handle map click to set destination
   const handleMapClick = useCallback((lat: number, lng: number) => {
     if (isAlarmActive) return;
     setDestination({ lat, lng });
   }, [isAlarmActive]);
 
-  // Handle destination selection from search
   const handleSetDestination = useCallback((lat: number, lng: number, name: string) => {
     setDestination({ lat, lng, name });
     toast({
@@ -46,29 +54,25 @@ const Index = () => {
     });
   }, [toast]);
 
-  // Clear destination
   const handleClearDestination = useCallback(() => {
     setDestination(null);
     setDistanceToDestination(null);
   }, []);
 
-  // Open map view
   const handleOpenMap = useCallback(() => {
     setViewMode('map');
   }, []);
 
-  // Confirm map selection and go back
   const handleConfirmMapSelection = useCallback(() => {
     if (destination) {
       toast({
         title: "Destination Set",
-        description: `${destination.lat.toFixed(4)}, ${destination.lng.toFixed(4)}`,
+        description: destination.name || `${destination.lat.toFixed(4)}, ${destination.lng.toFixed(4)}`,
       });
     }
     setViewMode('home');
   }, [destination, toast]);
 
-  // Start alarm setup (go to tracking view)
   const handleStartAlarmSetup = useCallback(() => {
     if (!destination || !currentPosition) {
       toast({
@@ -81,7 +85,6 @@ const Index = () => {
     setViewMode('tracking');
   }, [destination, currentPosition, toast]);
 
-  // Activate alarm and start watching position
   const handleActivateAlarm = useCallback(() => {
     if (!destination || !currentPosition) {
       toast({
@@ -101,7 +104,6 @@ const Index = () => {
     });
   }, [destination, currentPosition, alertRadius, activateAlarm, startWatching, toast]);
 
-  // Deactivate alarm
   const handleDeactivateAlarm = useCallback(() => {
     deactivateAlarm();
     stopWatching();
@@ -112,7 +114,6 @@ const Index = () => {
     });
   }, [deactivateAlarm, stopWatching, toast]);
 
-  // Stop ringing alarm
   const handleStopAlarm = useCallback(() => {
     stopAlarm();
     handleDeactivateAlarm();
@@ -120,7 +121,6 @@ const Index = () => {
     setDestination(null);
   }, [stopAlarm, handleDeactivateAlarm]);
 
-  // Go back to home
   const handleGoBack = useCallback(() => {
     if (isAlarmActive) {
       handleDeactivateAlarm();
@@ -128,7 +128,14 @@ const Index = () => {
     setViewMode('home');
   }, [isAlarmActive, handleDeactivateAlarm]);
 
-  // Calculate distance when position or destination changes
+  const handleOpenSettings = useCallback(() => {
+    setViewMode('settings');
+  }, []);
+
+  const handleUpdateAlarmSettings = useCallback((settings: Partial<AlarmSettings>) => {
+    updateAlarmSettings(settings);
+  }, [updateAlarmSettings]);
+
   useEffect(() => {
     if (currentPosition && destination) {
       const distance = calculateDistance(
@@ -139,14 +146,12 @@ const Index = () => {
       );
       setDistanceToDestination(distance);
 
-      // Check if within alert radius and alarm is active
       if (isAlarmActive && !isAlarmRinging && distance <= alertRadius) {
         triggerAlarm();
       }
     }
   }, [currentPosition, destination, alertRadius, isAlarmActive, isAlarmRinging, triggerAlarm]);
 
-  // Show error toast
   useEffect(() => {
     if (error) {
       toast({
@@ -157,10 +162,21 @@ const Index = () => {
     }
   }, [error, toast]);
 
-  // Request position on mount
   useEffect(() => {
     requestPosition();
   }, [requestPosition]);
+
+  // Settings screen
+  if (viewMode === 'settings') {
+    return (
+      <SettingsScreen
+        alarmSettings={alarmSettings}
+        onUpdateSettings={handleUpdateAlarmSettings}
+        onTestAlarm={testAlarm}
+        onBack={() => setViewMode('home')}
+      />
+    );
+  }
 
   // Home screen
   if (viewMode === 'home') {
@@ -173,6 +189,7 @@ const Index = () => {
         onOpenMap={handleOpenMap}
         onUseCurrentLocation={requestPosition}
         onStartAlarm={handleStartAlarmSetup}
+        onOpenSettings={handleOpenSettings}
       />
     );
   }
@@ -188,11 +205,12 @@ const Index = () => {
         onMapClick={handleMapClick}
         onBack={() => setViewMode('home')}
         onConfirm={handleConfirmMapSelection}
+        onSearchSelect={handleSetDestination}
       />
     );
   }
 
-  // Tracking view (with map and control panel)
+  // Tracking view
   return (
     <div className="h-screen w-screen overflow-hidden relative bg-background">
       <StatusBar 
