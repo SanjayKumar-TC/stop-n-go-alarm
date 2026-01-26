@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Navigation, Clock, Bell, BellOff, Settings, Maximize2, Minimize2, AlertTriangle, X, Map as MapIcon, Footprints, Bike, Train, Bus, Car } from 'lucide-react';
+import { MapPin, Navigation, Clock, Bell, BellOff, Settings, Maximize2, Minimize2, AlertTriangle, X, Map as MapIcon, Footprints, Bike, Train, Bus, Car, Sun, Moon, Globe, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { LocationSearch } from '@/components/LocationSearch';
-import { Map } from '@/components/Map';
+import { Map, MapTheme } from '@/components/Map';
 import { FavoritesList } from '@/components/FavoritesList';
 import { TripHistory } from '@/components/TripHistory';
 import { calculateDistance, formatDistance } from '@/hooks/useGeolocation';
@@ -28,6 +28,19 @@ const TRANSPORT_MODES: TransportModeConfig[] = [
   { id: 'bus', label: 'Bus', icon: <Bus className="w-4 h-4" />, avgSpeedKmH: 25 },
   { id: 'metro', label: 'Metro', icon: <Train className="w-4 h-4" />, avgSpeedKmH: 45 },
   { id: 'car', label: 'Car', icon: <Car className="w-4 h-4" />, avgSpeedKmH: 50 },
+];
+
+interface MapThemeOption {
+  id: MapTheme;
+  label: string;
+  icon: React.ReactNode;
+}
+
+const MAP_THEME_OPTIONS: MapThemeOption[] = [
+  { id: 'dark', label: 'Dark', icon: <Moon className="w-4 h-4" /> },
+  { id: 'light', label: 'Light', icon: <Sun className="w-4 h-4" /> },
+  { id: 'satellite', label: 'Satellite', icon: <Globe className="w-4 h-4" /> },
+  { id: 'traffic', label: 'Traffic', icon: <Layers className="w-4 h-4" /> },
 ];
 
 interface HomeScreenProps {
@@ -94,6 +107,7 @@ export const HomeScreen = ({
   const [destinationName, setDestinationName] = useState<string>('');
   const [isMapExpanded, setIsMapExpanded] = useState(false);
   const [transportMode, setTransportMode] = useState<TransportMode>('metro');
+  const [mapTheme, setMapTheme] = useState<MapTheme>('dark');
 
   // Update destination name when destination changes from map selection
   useEffect(() => {
@@ -320,6 +334,7 @@ export const HomeScreen = ({
                   onMapClick={handleMapClick}
                   isAlarmActive={isAlarmActive}
                   showRoute={true}
+                  theme={mapTheme}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent pointer-events-none" />
                 <p className="absolute bottom-2 left-0 right-0 text-center text-xs text-muted-foreground">
@@ -337,8 +352,35 @@ export const HomeScreen = ({
                   onMapClick={handleMapClick}
                   isAlarmActive={isAlarmActive}
                   showRoute={true}
+                  theme={mapTheme}
                 />
               </div>
+              
+              {/* Map Theme Selector */}
+              <div className="p-3 border-t border-border">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-muted-foreground">Map Style</span>
+                </div>
+                <ToggleGroup 
+                  type="single" 
+                  value={mapTheme} 
+                  onValueChange={(value) => value && setMapTheme(value as MapTheme)}
+                  className="grid grid-cols-4 gap-1"
+                >
+                  {MAP_THEME_OPTIONS.map((themeOpt) => (
+                    <ToggleGroupItem
+                      key={themeOpt.id}
+                      value={themeOpt.id}
+                      aria-label={themeOpt.label}
+                      className="flex flex-col items-center gap-1 h-auto py-2 px-1 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                    >
+                      {themeOpt.icon}
+                      <span className="text-[10px]">{themeOpt.label}</span>
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </div>
+              
               <div className="p-2 text-center border-t border-border">
                 <p className="text-xs text-muted-foreground">
                   {isAlarmActive ? 'Tracking your location...' : 'Tap on map to set destination'}
