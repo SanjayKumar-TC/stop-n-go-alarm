@@ -10,6 +10,37 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
+export type MapTheme = 'dark' | 'light' | 'satellite' | 'traffic';
+
+interface MapThemeConfig {
+  url: string;
+  attribution: string;
+  background: string;
+}
+
+const MAP_THEMES: Record<MapTheme, MapThemeConfig> = {
+  dark: {
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    background: 'hsl(220, 25%, 8%)',
+  },
+  light: {
+    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    background: 'hsl(0, 0%, 95%)',
+  },
+  satellite: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: '&copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics',
+    background: 'hsl(220, 25%, 15%)',
+  },
+  traffic: {
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    background: 'hsl(0, 0%, 90%)',
+  },
+};
+
 // Custom icons
 const createCurrentLocationIcon = () => L.divIcon({
   className: 'custom-marker',
@@ -56,16 +87,20 @@ interface MapProps {
   onMapClick: (lat: number, lng: number) => void;
   isAlarmActive: boolean;
   showRoute?: boolean;
+  theme?: MapTheme;
 }
 
-export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isAlarmActive, showRoute = true }: MapProps) => {
+export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isAlarmActive, showRoute = true, theme = 'dark' }: MapProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const currentMarkerRef = useRef<L.Marker | null>(null);
   const destinationMarkerRef = useRef<L.Marker | null>(null);
   const circleRef = useRef<L.Circle | null>(null);
   const routeLineRef = useRef<L.Polyline | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
   const hasInitializedRef = useRef(false);
+
+  const themeConfig = MAP_THEMES[theme];
 
   // Initialize map
   useEffect(() => {
@@ -82,9 +117,9 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
       zoomControl: true,
     });
 
-    // Dark tile layer
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    // Initial tile layer
+    tileLayerRef.current = L.tileLayer(themeConfig.url, {
+      attribution: themeConfig.attribution,
     }).addTo(map);
 
     // Handle map clicks
@@ -99,6 +134,21 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
       mapRef.current = null;
     };
   }, []);
+
+  // Update tile layer when theme changes
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Remove old tile layer
+    if (tileLayerRef.current) {
+      tileLayerRef.current.remove();
+    }
+
+    // Add new tile layer
+    tileLayerRef.current = L.tileLayer(themeConfig.url, {
+      attribution: themeConfig.attribution,
+    }).addTo(mapRef.current);
+  }, [theme, themeConfig]);
 
   // Update click handler when onMapClick changes
   useEffect(() => {
@@ -193,7 +243,7 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
     <div 
       ref={mapContainerRef} 
       className="h-full w-full"
-      style={{ background: 'hsl(220, 25%, 8%)' }}
+      style={{ background: themeConfig.background }}
     />
   );
 };
