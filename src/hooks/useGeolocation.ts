@@ -121,6 +121,7 @@ export const useGeolocation = (options: UseGeolocationOptions = defaultOptions) 
   return {
     ...state,
     getCurrentPosition,
+    requestPosition: getCurrentPosition,
     startWatching,
     stopWatching,
   };
