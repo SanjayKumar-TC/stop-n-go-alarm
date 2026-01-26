@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Navigation, Clock, Bell, BellOff, Settings, Maximize2, Minimize2, AlertTriangle } from 'lucide-react';
+import { MapPin, Navigation, Clock, Bell, BellOff, Settings, Maximize2, Minimize2, AlertTriangle, X, Map as MapIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { LocationSearch } from '@/components/LocationSearch';
 import { Map } from '@/components/Map';
 import { FavoritesList } from '@/components/FavoritesList';
+import { TripHistory } from '@/components/TripHistory';
 import { calculateDistance, formatDistance } from '@/hooks/useGeolocation';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { FavoriteDestination } from '@/hooks/useFavorites';
+import { Trip } from '@/hooks/useTripHistory';
 
 interface HomeScreenProps {
   currentPosition: { lat: number; lng: number } | null;
@@ -17,7 +19,10 @@ interface HomeScreenProps {
   isAlarmRinging: boolean;
   alertRadius: number;
   favorites: FavoriteDestination[];
+  trips: Trip[];
   onSetDestination: (lat: number, lng: number, name: string) => void;
+  onClearDestination: () => void;
+  onOpenMapForDestination: () => void;
   onUseCurrentLocation: () => void;
   onActivateAlarm: () => void;
   onDeactivateAlarm: () => void;
@@ -26,6 +31,8 @@ interface HomeScreenProps {
   onOpenSettings: () => void;
   onAddFavorite: (name: string, lat: number, lng: number, icon: FavoriteDestination['icon']) => void;
   onRemoveFavorite: (id: string) => void;
+  onDeleteTrip: (tripId: string) => void;
+  onClearHistory: () => void;
 }
 
 // Estimate travel time based on distance
@@ -50,7 +57,10 @@ export const HomeScreen = ({
   isAlarmRinging,
   alertRadius,
   favorites,
+  trips,
   onSetDestination,
+  onClearDestination,
+  onOpenMapForDestination,
   onUseCurrentLocation,
   onActivateAlarm,
   onDeactivateAlarm,
@@ -59,6 +69,8 @@ export const HomeScreen = ({
   onOpenSettings,
   onAddFavorite,
   onRemoveFavorite,
+  onDeleteTrip,
+  onClearHistory,
 }: HomeScreenProps) => {
   const [destinationName, setDestinationName] = useState<string>('');
   const [isMapExpanded, setIsMapExpanded] = useState(false);
@@ -67,22 +79,39 @@ export const HomeScreen = ({
   useEffect(() => {
     if (destination?.name) {
       setDestinationName(destination.name);
+    } else if (!destination) {
+      setDestinationName('');
     }
-  }, [destination?.name]);
+  }, [destination]);
 
   const handleSelectDestination = (lat: number, lng: number, name: string) => {
     setDestinationName(name);
     onSetDestination(lat, lng, name);
   };
 
+  const handleDestinationInputChange = (value: string) => {
+    setDestinationName(value);
+    // If input is cleared, clear the destination and stop tracking
+    if (!value.trim() && destination) {
+      onClearDestination();
+    }
+  };
+
   const handleMapClick = (lat: number, lng: number) => {
     if (isAlarmActive) return;
-    onSetDestination(lat, lng, `${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+    const name = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    setDestinationName(name);
+    onSetDestination(lat, lng, name);
   };
 
   const handleSelectFavorite = (fav: FavoriteDestination) => {
     setDestinationName(fav.name);
     onSetDestination(fav.lat, fav.lng, fav.name);
+  };
+
+  const handleSelectFromHistory = (lat: number, lng: number, name: string) => {
+    setDestinationName(name);
+    onSetDestination(lat, lng, name);
   };
 
   const distance = currentPosition && destination
@@ -158,16 +187,16 @@ export const HomeScreen = ({
         {/* Current Location */}
         <div className="glass-panel p-3 rounded-xl">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-success/20">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="p-2 rounded-lg bg-success/20 flex-shrink-0">
                 <Navigation className="w-4 h-4 text-success" />
               </div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-xs text-muted-foreground">Your Location</p>
                 {isLoadingLocation ? (
                   <p className="text-sm text-foreground">Getting location...</p>
                 ) : currentPosition ? (
-                  <p className="text-sm text-foreground font-medium">
+                  <p className="text-sm text-foreground font-medium truncate">
                     {currentPosition.lat.toFixed(4)}, {currentPosition.lng.toFixed(4)}
                   </p>
                 ) : (
@@ -180,25 +209,49 @@ export const HomeScreen = ({
               size="sm"
               onClick={onUseCurrentLocation}
               disabled={isLoadingLocation}
-              className="text-xs"
+              className="text-xs flex-shrink-0"
             >
               Refresh
             </Button>
           </div>
         </div>
 
-        {/* Destination Search - disabled when alarm active */}
+        {/* Destination Search with Map Button */}
         {!isAlarmActive && (
           <div className="space-y-2">
             <label className="text-xs font-medium text-muted-foreground flex items-center gap-2">
               <MapPin className="w-3 h-3" />
-              Search Destination
+              Destination
             </label>
-            <LocationSearch
-              placeholder="Search for your destination..."
-              onSelectLocation={handleSelectDestination}
-              value={destinationName}
-            />
+            <div className="flex gap-2">
+              <div className="flex-1 relative">
+                <LocationSearch
+                  placeholder="Search for your destination..."
+                  onSelectLocation={handleSelectDestination}
+                  value={destinationName}
+                  onChange={handleDestinationInputChange}
+                />
+                {destination && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6"
+                    onClick={onClearDestination}
+                  >
+                    <X className="w-4 h-4 text-muted-foreground" />
+                  </Button>
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onOpenMapForDestination}
+                className="flex-shrink-0 h-10 w-10"
+                title="Choose on map"
+              >
+                <MapIcon className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         )}
 
@@ -344,6 +397,16 @@ export const HomeScreen = ({
             </div>
           )}
         </div>
+
+        {/* Trip History */}
+        {!isAlarmActive && (
+          <TripHistory
+            trips={trips}
+            onDeleteTrip={onDeleteTrip}
+            onClearHistory={onClearHistory}
+            onSelectDestination={handleSelectFromHistory}
+          />
+        )}
       </div>
 
       {/* Bottom Action */}
