@@ -15,6 +15,7 @@ interface LocationSearchProps {
   onSelectLocation: (lat: number, lng: number, name: string) => void;
   value?: string;
   disabled?: boolean;
+  onChange?: (value: string) => void;
 }
 
 export const LocationSearch = ({
@@ -22,6 +23,7 @@ export const LocationSearch = ({
   onSelectLocation,
   value = "",
   disabled = false,
+  onChange,
 }: LocationSearchProps) => {
   const [query, setQuery] = useState(value);
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -77,6 +79,9 @@ export const LocationSearch = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newQuery = e.target.value;
     setQuery(newQuery);
+    
+    // Notify parent of change
+    onChange?.(newQuery);
 
     // Debounce search
     if (searchTimeout.current) {
@@ -105,6 +110,7 @@ export const LocationSearch = ({
     setQuery('');
     setResults([]);
     setShowResults(false);
+    onChange?.('');
   };
 
   return (

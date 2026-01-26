@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { HomeScreen } from '@/components/HomeScreen';
 import { MapView } from '@/components/MapView';
 import { SettingsScreen } from '@/components/SettingsScreen';
 import { useGeolocation, calculateDistance } from '@/hooks/useGeolocation';
 import { useAlarm, AlarmSettings } from '@/hooks/useAlarm';
 import { useFavorites, FavoriteDestination } from '@/hooks/useFavorites';
+import { useTripHistory } from '@/hooks/useTripHistory';
 import { useToast } from '@/hooks/use-toast';
 
 interface Destination {
@@ -14,12 +15,15 @@ interface Destination {
 }
 
 type ViewMode = 'home' | 'map' | 'settings';
+type MapSelectionMode = 'destination' | 'current' | null;
 
 const Index = () => {
   const [destination, setDestination] = useState<Destination | null>(null);
   const [alertRadius, setAlertRadius] = useState(1000);
   const [distanceToDestination, setDistanceToDestination] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('home');
+  const [mapSelectionMode, setMapSelectionMode] = useState<MapSelectionMode>(null);
+  const currentTripIdRef = useRef<string | null>(null);
   
   const { toast } = useToast();
   const { position, error, isLoading, startWatching, stopWatching, requestPosition } = useGeolocation();
@@ -35,6 +39,7 @@ const Index = () => {
     testAlarm,
   } = useAlarm();
   const { favorites, addFavorite, removeFavorite } = useFavorites();
+  const { trips, startTrip, endTrip, deleteTrip, clearHistory } = useTripHistory();
 
   const currentPosition = position
     ? { lat: position.coords.latitude, lng: position.coords.longitude }
@@ -54,11 +59,25 @@ const Index = () => {
   }, [toast]);
 
   const handleClearDestination = useCallback(() => {
+    // Auto-stop tracking when destination is cleared
+    if (isAlarmActive) {
+      deactivateAlarm();
+      stopWatching();
+      if (currentTripIdRef.current) {
+        endTrip(currentTripIdRef.current, false);
+        currentTripIdRef.current = null;
+      }
+      toast({
+        title: "Tracking Stopped",
+        description: "Destination was cleared",
+      });
+    }
     setDestination(null);
     setDistanceToDestination(null);
-  }, []);
+  }, [isAlarmActive, deactivateAlarm, stopWatching, endTrip, toast]);
 
-  const handleOpenMap = useCallback(() => {
+  const handleOpenMapForDestination = useCallback(() => {
+    setMapSelectionMode('destination');
     setViewMode('map');
   }, []);
 
@@ -69,6 +88,7 @@ const Index = () => {
         description: destination.name || `${destination.lat.toFixed(4)}, ${destination.lng.toFixed(4)}`,
       });
     }
+    setMapSelectionMode(null);
     setViewMode('home');
   }, [destination, toast]);
 
@@ -82,6 +102,15 @@ const Index = () => {
       return;
     }
 
+    // Start trip tracking
+    const trip = startTrip(
+      destination.name || `${destination.lat.toFixed(4)}, ${destination.lng.toFixed(4)}`,
+      destination.lat,
+      destination.lng,
+      alertRadius
+    );
+    currentTripIdRef.current = trip.id;
+
     activateAlarm();
     startWatching();
     
@@ -89,29 +118,42 @@ const Index = () => {
       title: "Alarm Activated",
       description: `You'll be alerted when within ${alertRadius < 1000 ? alertRadius + 'm' : (alertRadius / 1000).toFixed(1) + 'km'} of your destination`,
     });
-  }, [destination, currentPosition, alertRadius, activateAlarm, startWatching, toast]);
+  }, [destination, currentPosition, alertRadius, activateAlarm, startWatching, startTrip, toast]);
 
   const handleDeactivateAlarm = useCallback(() => {
     deactivateAlarm();
     stopWatching();
     
+    // End trip as incomplete
+    if (currentTripIdRef.current) {
+      endTrip(currentTripIdRef.current, false);
+      currentTripIdRef.current = null;
+    }
+    
     toast({
       title: "Alarm Deactivated",
       description: "Location tracking stopped",
     });
-  }, [deactivateAlarm, stopWatching, toast]);
+  }, [deactivateAlarm, stopWatching, endTrip, toast]);
 
   const handleStopAlarm = useCallback(() => {
     stopAlarm();
     deactivateAlarm();
     stopWatching();
+    
+    // End trip as completed
+    if (currentTripIdRef.current) {
+      endTrip(currentTripIdRef.current, true);
+      currentTripIdRef.current = null;
+    }
+    
     setDestination(null);
     
     toast({
       title: "Alarm Stopped",
       description: "Have a great day!",
     });
-  }, [stopAlarm, deactivateAlarm, stopWatching, toast]);
+  }, [stopAlarm, deactivateAlarm, stopWatching, endTrip, toast]);
 
   const handleOpenSettings = useCallback(() => {
     setViewMode('settings');
@@ -135,6 +177,20 @@ const Index = () => {
       title: "Favorite Removed",
     });
   }, [removeFavorite, toast]);
+
+  const handleDeleteTrip = useCallback((tripId: string) => {
+    deleteTrip(tripId);
+    toast({
+      title: "Trip Deleted",
+    });
+  }, [deleteTrip, toast]);
+
+  const handleClearHistory = useCallback(() => {
+    clearHistory();
+    toast({
+      title: "History Cleared",
+    });
+  }, [clearHistory, toast]);
 
   useEffect(() => {
     if (currentPosition && destination) {
@@ -187,7 +243,10 @@ const Index = () => {
         alertRadius={alertRadius}
         isAlarmActive={false}
         onMapClick={handleMapClick}
-        onBack={() => setViewMode('home')}
+        onBack={() => {
+          setMapSelectionMode(null);
+          setViewMode('home');
+        }}
         onConfirm={handleConfirmMapSelection}
         onSearchSelect={handleSetDestination}
       />
@@ -204,7 +263,10 @@ const Index = () => {
       isAlarmRinging={isAlarmRinging}
       alertRadius={alertRadius}
       favorites={favorites}
+      trips={trips}
       onSetDestination={handleSetDestination}
+      onClearDestination={handleClearDestination}
+      onOpenMapForDestination={handleOpenMapForDestination}
       onUseCurrentLocation={requestPosition}
       onActivateAlarm={handleActivateAlarm}
       onDeactivateAlarm={handleDeactivateAlarm}
@@ -213,6 +275,8 @@ const Index = () => {
       onOpenSettings={handleOpenSettings}
       onAddFavorite={handleAddFavorite}
       onRemoveFavorite={handleRemoveFavorite}
+      onDeleteTrip={handleDeleteTrip}
+      onClearHistory={handleClearHistory}
     />
   );
 };
