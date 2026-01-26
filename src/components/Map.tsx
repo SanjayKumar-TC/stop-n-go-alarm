@@ -55,14 +55,16 @@ interface MapProps {
   alertRadius: number;
   onMapClick: (lat: number, lng: number) => void;
   isAlarmActive: boolean;
+  showRoute?: boolean;
 }
 
-export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isAlarmActive }: MapProps) => {
+export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isAlarmActive, showRoute = true }: MapProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const currentMarkerRef = useRef<L.Marker | null>(null);
   const destinationMarkerRef = useRef<L.Marker | null>(null);
   const circleRef = useRef<L.Circle | null>(null);
+  const routeLineRef = useRef<L.Polyline | null>(null);
   const hasInitializedRef = useRef(false);
 
   // Initialize map
@@ -141,6 +143,10 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
       circleRef.current.remove();
       circleRef.current = null;
     }
+    if (routeLineRef.current) {
+      routeLineRef.current.remove();
+      routeLineRef.current = null;
+    }
 
     if (!destination) return;
 
@@ -158,7 +164,30 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
       fillOpacity: 0.15,
       weight: 2,
     }).addTo(mapRef.current);
-  }, [destination, alertRadius, isAlarmActive]);
+
+    // Add route line from current position to destination
+    if (showRoute && currentPosition) {
+      routeLineRef.current = L.polyline(
+        [
+          [currentPosition.lat, currentPosition.lng],
+          [destination.lat, destination.lng]
+        ],
+        {
+          color: 'hsl(174, 72%, 50%)',
+          weight: 3,
+          opacity: 0.7,
+          dashArray: '10, 10',
+        }
+      ).addTo(mapRef.current);
+
+      // Fit map to show both points
+      const bounds = L.latLngBounds(
+        [currentPosition.lat, currentPosition.lng],
+        [destination.lat, destination.lng]
+      );
+      mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+    }
+  }, [destination, alertRadius, isAlarmActive, currentPosition, showRoute]);
 
   return (
     <div 

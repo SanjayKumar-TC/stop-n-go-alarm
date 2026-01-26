@@ -1,12 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { HomeScreen } from '@/components/HomeScreen';
 import { MapView } from '@/components/MapView';
-import { ControlPanel } from '@/components/ControlPanel';
-import { StatusBar } from '@/components/StatusBar';
 import { SettingsScreen } from '@/components/SettingsScreen';
-import { Map } from '@/components/Map';
 import { useGeolocation, calculateDistance } from '@/hooks/useGeolocation';
 import { useAlarm, AlarmSettings } from '@/hooks/useAlarm';
+import { useFavorites, FavoriteDestination } from '@/hooks/useFavorites';
 import { useToast } from '@/hooks/use-toast';
 
 interface Destination {
@@ -15,7 +13,7 @@ interface Destination {
   name?: string;
 }
 
-type ViewMode = 'home' | 'map' | 'tracking' | 'settings';
+type ViewMode = 'home' | 'map' | 'settings';
 
 const Index = () => {
   const [destination, setDestination] = useState<Destination | null>(null);
@@ -36,6 +34,7 @@ const Index = () => {
     deactivateAlarm,
     testAlarm,
   } = useAlarm();
+  const { favorites, addFavorite, removeFavorite } = useFavorites();
 
   const currentPosition = position
     ? { lat: position.coords.latitude, lng: position.coords.longitude }
@@ -73,18 +72,6 @@ const Index = () => {
     setViewMode('home');
   }, [destination, toast]);
 
-  const handleStartAlarmSetup = useCallback(() => {
-    if (!destination || !currentPosition) {
-      toast({
-        title: "Cannot start alarm",
-        description: "Please ensure GPS is active and destination is set",
-        variant: "destructive",
-      });
-      return;
-    }
-    setViewMode('tracking');
-  }, [destination, currentPosition, toast]);
-
   const handleActivateAlarm = useCallback(() => {
     if (!destination || !currentPosition) {
       toast({
@@ -116,17 +103,15 @@ const Index = () => {
 
   const handleStopAlarm = useCallback(() => {
     stopAlarm();
-    handleDeactivateAlarm();
-    setViewMode('home');
+    deactivateAlarm();
+    stopWatching();
     setDestination(null);
-  }, [stopAlarm, handleDeactivateAlarm]);
-
-  const handleGoBack = useCallback(() => {
-    if (isAlarmActive) {
-      handleDeactivateAlarm();
-    }
-    setViewMode('home');
-  }, [isAlarmActive, handleDeactivateAlarm]);
+    
+    toast({
+      title: "Alarm Stopped",
+      description: "Have a great day!",
+    });
+  }, [stopAlarm, deactivateAlarm, stopWatching, toast]);
 
   const handleOpenSettings = useCallback(() => {
     setViewMode('settings');
@@ -135,6 +120,21 @@ const Index = () => {
   const handleUpdateAlarmSettings = useCallback((settings: Partial<AlarmSettings>) => {
     updateAlarmSettings(settings);
   }, [updateAlarmSettings]);
+
+  const handleAddFavorite = useCallback((name: string, lat: number, lng: number, icon: FavoriteDestination['icon']) => {
+    addFavorite(name, lat, lng, icon);
+    toast({
+      title: "Favorite Saved",
+      description: name,
+    });
+  }, [addFavorite, toast]);
+
+  const handleRemoveFavorite = useCallback((id: string) => {
+    removeFavorite(id);
+    toast({
+      title: "Favorite Removed",
+    });
+  }, [removeFavorite, toast]);
 
   useEffect(() => {
     if (currentPosition && destination) {
@@ -178,23 +178,7 @@ const Index = () => {
     );
   }
 
-  // Home screen
-  if (viewMode === 'home') {
-    return (
-      <HomeScreen
-        currentPosition={currentPosition}
-        destination={destination}
-        isLoadingLocation={isLoading}
-        onSetDestination={handleSetDestination}
-        onOpenMap={handleOpenMap}
-        onUseCurrentLocation={requestPosition}
-        onStartAlarm={handleStartAlarmSetup}
-        onOpenSettings={handleOpenSettings}
-      />
-    );
-  }
-
-  // Map selection view
+  // Map selection view (fullscreen map for detailed selection)
   if (viewMode === 'map') {
     return (
       <MapView
@@ -210,38 +194,26 @@ const Index = () => {
     );
   }
 
-  // Tracking view
+  // Home screen (main interface with embedded map)
   return (
-    <div className="h-screen w-screen overflow-hidden relative bg-background">
-      <StatusBar 
-        isLoading={isLoading} 
-        hasLocation={!!currentPosition} 
-        error={error?.message || null}
-        onBack={handleGoBack}
-        showBack={true}
-      />
-      
-      <Map
-        currentPosition={currentPosition}
-        destination={destination}
-        alertRadius={alertRadius}
-        onMapClick={handleMapClick}
-        isAlarmActive={isAlarmActive || isAlarmRinging}
-      />
-      
-      <ControlPanel
-        destination={destination}
-        alertRadius={alertRadius}
-        onAlertRadiusChange={setAlertRadius}
-        distanceToDestination={distanceToDestination}
-        isAlarmActive={isAlarmActive}
-        isAlarmRinging={isAlarmRinging}
-        onActivateAlarm={handleActivateAlarm}
-        onDeactivateAlarm={handleDeactivateAlarm}
-        onStopAlarm={handleStopAlarm}
-        onClearDestination={handleClearDestination}
-      />
-    </div>
+    <HomeScreen
+      currentPosition={currentPosition}
+      destination={destination}
+      isLoadingLocation={isLoading}
+      isAlarmActive={isAlarmActive}
+      isAlarmRinging={isAlarmRinging}
+      alertRadius={alertRadius}
+      favorites={favorites}
+      onSetDestination={handleSetDestination}
+      onUseCurrentLocation={requestPosition}
+      onActivateAlarm={handleActivateAlarm}
+      onDeactivateAlarm={handleDeactivateAlarm}
+      onStopAlarm={handleStopAlarm}
+      onAlertRadiusChange={setAlertRadius}
+      onOpenSettings={handleOpenSettings}
+      onAddFavorite={handleAddFavorite}
+      onRemoveFavorite={handleRemoveFavorite}
+    />
   );
 };
 
