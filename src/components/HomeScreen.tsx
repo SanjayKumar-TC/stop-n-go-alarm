@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Navigation, Clock, Bell, BellOff, Settings, Maximize2, Minimize2, AlertTriangle, X, Map as MapIcon } from 'lucide-react';
+import { MapPin, Navigation, Clock, Bell, BellOff, Settings, Maximize2, Minimize2, AlertTriangle, X, Map as MapIcon, Footprints, Bike, Train, Bus, Car } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { LocationSearch } from '@/components/LocationSearch';
@@ -10,6 +10,25 @@ import { calculateDistance, formatDistance } from '@/hooks/useGeolocation';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { FavoriteDestination } from '@/hooks/useFavorites';
 import { Trip } from '@/hooks/useTripHistory';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+
+export type TransportMode = 'walk' | 'cycle' | 'bike' | 'bus' | 'metro' | 'car';
+
+interface TransportModeConfig {
+  id: TransportMode;
+  label: string;
+  icon: React.ReactNode;
+  avgSpeedKmH: number;
+}
+
+const TRANSPORT_MODES: TransportModeConfig[] = [
+  { id: 'walk', label: 'Walk', icon: <Footprints className="w-4 h-4" />, avgSpeedKmH: 5 },
+  { id: 'cycle', label: 'Cycle', icon: <Bike className="w-4 h-4" />, avgSpeedKmH: 15 },
+  { id: 'bike', label: 'Bike', icon: <Bike className="w-4 h-4" />, avgSpeedKmH: 40 },
+  { id: 'bus', label: 'Bus', icon: <Bus className="w-4 h-4" />, avgSpeedKmH: 25 },
+  { id: 'metro', label: 'Metro', icon: <Train className="w-4 h-4" />, avgSpeedKmH: 45 },
+  { id: 'car', label: 'Car', icon: <Car className="w-4 h-4" />, avgSpeedKmH: 50 },
+];
 
 interface HomeScreenProps {
   currentPosition: { lat: number; lng: number } | null;
@@ -35,10 +54,10 @@ interface HomeScreenProps {
   onClearHistory: () => void;
 }
 
-// Estimate travel time based on distance
-const estimateTravelTime = (distanceMeters: number): string => {
-  const avgSpeedKmH = 30;
-  const hours = distanceMeters / 1000 / avgSpeedKmH;
+// Estimate travel time based on distance and transport mode
+const estimateTravelTime = (distanceMeters: number, mode: TransportMode): string => {
+  const modeConfig = TRANSPORT_MODES.find(m => m.id === mode) || TRANSPORT_MODES[0];
+  const hours = distanceMeters / 1000 / modeConfig.avgSpeedKmH;
   const minutes = Math.round(hours * 60);
   
   if (minutes < 1) return '< 1 min';
@@ -74,6 +93,7 @@ export const HomeScreen = ({
 }: HomeScreenProps) => {
   const [destinationName, setDestinationName] = useState<string>('');
   const [isMapExpanded, setIsMapExpanded] = useState(false);
+  const [transportMode, setTransportMode] = useState<TransportMode>('metro');
 
   // Update destination name when destination changes from map selection
   useEffect(() => {
@@ -350,6 +370,30 @@ export const HomeScreen = ({
                 </div>
               </div>
 
+              {/* Transport Mode Selector */}
+              <div className="space-y-2">
+                <span className="text-sm text-muted-foreground">Mode of Transport</span>
+                <ToggleGroup 
+                  type="single" 
+                  value={transportMode} 
+                  onValueChange={(value) => value && setTransportMode(value as TransportMode)}
+                  className="grid grid-cols-6 gap-1"
+                >
+                  {TRANSPORT_MODES.map((mode) => (
+                    <ToggleGroupItem
+                      key={mode.id}
+                      value={mode.id}
+                      aria-label={mode.label}
+                      className="flex flex-col items-center gap-1 h-auto py-2 px-1 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                      disabled={isAlarmActive}
+                    >
+                      {mode.icon}
+                      <span className="text-[10px]">{mode.label}</span>
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </div>
+
               {/* Distance and Time */}
               {distance !== null && (
                 <div className="grid grid-cols-2 gap-4">
@@ -360,8 +404,8 @@ export const HomeScreen = ({
                   </div>
                   <div className="text-center p-3 rounded-lg bg-muted/50">
                     <Clock className="w-5 h-5 text-primary mx-auto mb-1" />
-                    <p className="text-xl font-bold text-foreground">{estimateTravelTime(distance)}</p>
-                    <p className="text-xs text-muted-foreground">Est. Time</p>
+                    <p className="text-xl font-bold text-foreground">{estimateTravelTime(distance, transportMode)}</p>
+                    <p className="text-xs text-muted-foreground">Est. Time ({TRANSPORT_MODES.find(m => m.id === transportMode)?.label})</p>
                   </div>
                 </div>
               )}
