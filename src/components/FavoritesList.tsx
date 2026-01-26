@@ -34,7 +34,7 @@ const iconOptions: { value: FavoriteDestination['icon']; label: string }[] = [
 ];
 
 export const FavoritesList = ({
-  favorites,
+  favorites = [],
   currentDestination,
   onSelectFavorite,
   onAddFavorite,
@@ -43,6 +43,9 @@ export const FavoritesList = ({
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newName, setNewName] = useState('');
   const [newIcon, setNewIcon] = useState<FavoriteDestination['icon']>('star');
+
+  // Safety check for favorites array
+  const safefavorites = favorites || [];
 
   const handleAddCurrent = () => {
     if (!currentDestination || !newName.trim()) return;
@@ -120,7 +123,7 @@ export const FavoritesList = ({
         )}
       </div>
 
-      {favorites.length === 0 ? (
+      {safefavorites.length === 0 ? (
         <div className="text-center py-4 text-muted-foreground">
           <Star className="w-6 h-6 mx-auto mb-2 opacity-50" />
           <p className="text-xs">No favorites yet</p>
@@ -128,7 +131,7 @@ export const FavoritesList = ({
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-2">
-          {favorites.map((fav) => {
+          {safefavorites.map((fav) => {
             const IconComp = iconMap[fav.icon];
             return (
               <div
