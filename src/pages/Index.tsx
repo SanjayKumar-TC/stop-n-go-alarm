@@ -6,6 +6,7 @@ import { useGeolocation, calculateDistance } from '@/hooks/useGeolocation';
 import { useAlarm, AlarmSettings } from '@/hooks/useAlarm';
 import { useFavorites, FavoriteDestination } from '@/hooks/useFavorites';
 import { useTripHistory } from '@/hooks/useTripHistory';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useToast } from '@/hooks/use-toast';
 
 interface Destination {
@@ -40,6 +41,13 @@ const Index = () => {
   } = useAlarm();
   const { favorites, addFavorite, removeFavorite } = useFavorites();
   const { trips, startTrip, endTrip, deleteTrip, clearHistory } = useTripHistory();
+  const { 
+    permission: notificationPermission, 
+    requestPermission: requestNotificationPermission,
+    showAlarmNotification,
+    showArrivalConfirmation,
+    showTrackingStarted,
+  } = usePushNotifications();
 
   const currentPosition = position
     ? { lat: position.coords.latitude, lng: position.coords.longitude }
@@ -92,7 +100,7 @@ const Index = () => {
     setViewMode('home');
   }, [destination, toast]);
 
-  const handleActivateAlarm = useCallback(() => {
+  const handleActivateAlarm = useCallback(async () => {
     if (!destination || !currentPosition) {
       toast({
         title: "Cannot start alarm",
@@ -102,9 +110,16 @@ const Index = () => {
       return;
     }
 
+    // Request notification permission if not granted
+    if (notificationPermission.status !== 'granted') {
+      await requestNotificationPermission();
+    }
+
+    const destinationName = destination.name || `${destination.lat.toFixed(4)}, ${destination.lng.toFixed(4)}`;
+
     // Start trip tracking
     const trip = startTrip(
-      destination.name || `${destination.lat.toFixed(4)}, ${destination.lng.toFixed(4)}`,
+      destinationName,
       destination.lat,
       destination.lng,
       alertRadius
@@ -114,11 +129,14 @@ const Index = () => {
     activateAlarm();
     startWatching();
     
+    // Show push notification for tracking started
+    showTrackingStarted(destinationName, alertRadius);
+    
     toast({
       title: "Alarm Activated",
       description: `You'll be alerted when within ${alertRadius < 1000 ? alertRadius + 'm' : (alertRadius / 1000).toFixed(1) + 'km'} of your destination`,
     });
-  }, [destination, currentPosition, alertRadius, activateAlarm, startWatching, startTrip, toast]);
+  }, [destination, currentPosition, alertRadius, activateAlarm, startWatching, startTrip, notificationPermission, requestNotificationPermission, showTrackingStarted, toast]);
 
   const handleDeactivateAlarm = useCallback(() => {
     deactivateAlarm();
@@ -137,6 +155,8 @@ const Index = () => {
   }, [deactivateAlarm, stopWatching, endTrip, toast]);
 
   const handleStopAlarm = useCallback(() => {
+    const destinationName = destination?.name || 'your destination';
+    
     stopAlarm();
     deactivateAlarm();
     stopWatching();
@@ -147,13 +167,16 @@ const Index = () => {
       currentTripIdRef.current = null;
     }
     
+    // Show push notification
+    showArrivalConfirmation(destinationName);
+    
     setDestination(null);
     
     toast({
-      title: "Alarm Stopped",
-      description: "Have a great day!",
+      title: "👋 Hope you didn't miss your stop!",
+      description: "Have a great day ahead!",
     });
-  }, [stopAlarm, deactivateAlarm, stopWatching, endTrip, toast]);
+  }, [stopAlarm, deactivateAlarm, stopWatching, endTrip, destination, showArrivalConfirmation, toast]);
 
   const handleOpenSettings = useCallback(() => {
     setViewMode('settings');
@@ -204,9 +227,12 @@ const Index = () => {
 
       if (isAlarmActive && !isAlarmRinging && distance <= alertRadius) {
         triggerAlarm();
+        // Show push notification when alarm triggers
+        const destinationName = destination.name || 'your destination';
+        showAlarmNotification(destinationName);
       }
     }
-  }, [currentPosition, destination, alertRadius, isAlarmActive, isAlarmRinging, triggerAlarm]);
+  }, [currentPosition, destination, alertRadius, isAlarmActive, isAlarmRinging, triggerAlarm, showAlarmNotification]);
 
   useEffect(() => {
     if (error) {
