@@ -1,9 +1,8 @@
 import { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Circle, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Fix for default marker icons in React-Leaflet
+// Fix for default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
@@ -12,12 +11,12 @@ L.Icon.Default.mergeOptions({
 });
 
 // Custom icons
-const currentLocationIcon = L.divIcon({
+const createCurrentLocationIcon = () => L.divIcon({
   className: 'custom-marker',
   html: `<div style="
     width: 20px;
     height: 20px;
-    background: hsl(174 72% 50%);
+    background: hsl(174, 72%, 50%);
     border: 3px solid white;
     border-radius: 50%;
     box-shadow: 0 2px 8px rgba(0,0,0,0.4);
@@ -26,12 +25,12 @@ const currentLocationIcon = L.divIcon({
   iconAnchor: [10, 10],
 });
 
-const destinationIcon = L.divIcon({
+const createDestinationIcon = () => L.divIcon({
   className: 'custom-marker',
   html: `<div style="
     width: 24px;
     height: 24px;
-    background: hsl(0 84% 60%);
+    background: hsl(0, 84%, 60%);
     border: 3px solid white;
     border-radius: 50%;
     box-shadow: 0 2px 8px rgba(0,0,0,0.4);
@@ -58,76 +57,114 @@ interface MapProps {
   isAlarmActive: boolean;
 }
 
-// Component to handle map events
-const MapEvents = ({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) => {
-  useMapEvents({
-    click: (e) => {
-      onMapClick(e.latlng.lat, e.latlng.lng);
-    },
-  });
-  return null;
-};
-
-// Component to recenter map
-const RecenterMap = ({ position }: { position: { lat: number; lng: number } }) => {
-  const map = useMap();
-  const hasRecentered = useRef(false);
-
-  useEffect(() => {
-    if (position && !hasRecentered.current) {
-      map.setView([position.lat, position.lng], 15);
-      hasRecentered.current = true;
-    }
-  }, [map, position]);
-
-  return null;
-};
-
 export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isAlarmActive }: MapProps) => {
-  const defaultCenter: [number, number] = [20.5937, 78.9629]; // India center
+  const mapRef = useRef<L.Map | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const currentMarkerRef = useRef<L.Marker | null>(null);
+  const destinationMarkerRef = useRef<L.Marker | null>(null);
+  const circleRef = useRef<L.Circle | null>(null);
+  const hasInitializedRef = useRef(false);
+
+  // Initialize map
+  useEffect(() => {
+    if (!mapContainerRef.current || mapRef.current) return;
+
+    const defaultCenter: [number, number] = [20.5937, 78.9629]; // India center
+    const center = currentPosition 
+      ? [currentPosition.lat, currentPosition.lng] as [number, number]
+      : defaultCenter;
+
+    const map = L.map(mapContainerRef.current, {
+      center,
+      zoom: 15,
+      zoomControl: true,
+    });
+
+    // Dark tile layer
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
+
+    // Handle map clicks
+    map.on('click', (e: L.LeafletMouseEvent) => {
+      onMapClick(e.latlng.lat, e.latlng.lng);
+    });
+
+    mapRef.current = map;
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, []);
+
+  // Update click handler when onMapClick changes
+  useEffect(() => {
+    if (!mapRef.current) return;
+    
+    mapRef.current.off('click');
+    mapRef.current.on('click', (e: L.LeafletMouseEvent) => {
+      onMapClick(e.latlng.lat, e.latlng.lng);
+    });
+  }, [onMapClick]);
+
+  // Update current position marker and center map once
+  useEffect(() => {
+    if (!mapRef.current || !currentPosition) return;
+
+    // Center map on first position
+    if (!hasInitializedRef.current) {
+      mapRef.current.setView([currentPosition.lat, currentPosition.lng], 15);
+      hasInitializedRef.current = true;
+    }
+
+    // Update or create current location marker
+    if (currentMarkerRef.current) {
+      currentMarkerRef.current.setLatLng([currentPosition.lat, currentPosition.lng]);
+    } else {
+      currentMarkerRef.current = L.marker([currentPosition.lat, currentPosition.lng], {
+        icon: createCurrentLocationIcon(),
+      }).addTo(mapRef.current);
+    }
+  }, [currentPosition]);
+
+  // Update destination marker and circle
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Remove existing destination elements
+    if (destinationMarkerRef.current) {
+      destinationMarkerRef.current.remove();
+      destinationMarkerRef.current = null;
+    }
+    if (circleRef.current) {
+      circleRef.current.remove();
+      circleRef.current = null;
+    }
+
+    if (!destination) return;
+
+    // Add destination marker
+    destinationMarkerRef.current = L.marker([destination.lat, destination.lng], {
+      icon: createDestinationIcon(),
+    }).addTo(mapRef.current);
+
+    // Add alert circle
+    const circleColor = isAlarmActive ? 'hsl(0, 84%, 60%)' : 'hsl(174, 72%, 50%)';
+    circleRef.current = L.circle([destination.lat, destination.lng], {
+      radius: alertRadius,
+      color: circleColor,
+      fillColor: circleColor,
+      fillOpacity: 0.15,
+      weight: 2,
+    }).addTo(mapRef.current);
+  }, [destination, alertRadius, isAlarmActive]);
 
   return (
-    <MapContainer
-      center={currentPosition ? [currentPosition.lat, currentPosition.lng] : defaultCenter}
-      zoom={15}
-      className="map-container h-full w-full"
-      zoomControl={true}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-      />
-      
-      <MapEvents onMapClick={onMapClick} />
-      
-      {currentPosition && (
-        <>
-          <RecenterMap position={currentPosition} />
-          <Marker 
-            position={[currentPosition.lat, currentPosition.lng]} 
-            icon={currentLocationIcon}
-          />
-        </>
-      )}
-      
-      {destination && (
-        <>
-          <Marker 
-            position={[destination.lat, destination.lng]} 
-            icon={destinationIcon}
-          />
-          <Circle
-            center={[destination.lat, destination.lng]}
-            radius={alertRadius}
-            pathOptions={{
-              color: isAlarmActive ? 'hsl(0, 84%, 60%)' : 'hsl(174, 72%, 50%)',
-              fillColor: isAlarmActive ? 'hsl(0, 84%, 60%)' : 'hsl(174, 72%, 50%)',
-              fillOpacity: 0.15,
-              weight: 2,
-            }}
-          />
-        </>
-      )}
-    </MapContainer>
+    <div 
+      ref={mapContainerRef} 
+      className="h-full w-full"
+      style={{ background: 'hsl(220, 25%, 8%)' }}
+    />
   );
 };
