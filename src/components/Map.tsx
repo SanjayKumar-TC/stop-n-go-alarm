@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Locate, Compass } from 'lucide-react';
 
 // Fix for default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -240,48 +239,11 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
     }
   }, [destination, alertRadius, isAlarmActive, currentPosition, showRoute]);
 
-  const handleLocateClick = () => {
-    if (mapRef.current && currentPosition) {
-      mapRef.current.setView([currentPosition.lat, currentPosition.lng], 16, {
-        animate: true,
-        duration: 0.5,
-      });
-    }
-  };
-
-  const handleCompassClick = () => {
-    if (mapRef.current) {
-      // Reset view to default zoom while maintaining current center
-      const center = mapRef.current.getCenter();
-      mapRef.current.setView(center, mapRef.current.getZoom(), {
-        animate: true,
-        duration: 0.3,
-      });
-    }
-  };
-
   return (
     <div 
       ref={mapContainerRef} 
-      className="h-full w-full relative"
+      className="h-full w-full"
       style={{ background: themeConfig.background }}
-    >
-      <div className="absolute bottom-4 right-4 z-[1000] flex flex-col gap-2">
-        <button
-          onClick={handleCompassClick}
-          className="bg-background/90 backdrop-blur-sm border border-border rounded-full p-3 shadow-lg hover:bg-accent transition-colors"
-          title="North indicator"
-        >
-          <Compass className="h-5 w-5 text-primary" />
-        </button>
-        <button
-          onClick={handleLocateClick}
-          className="bg-background/90 backdrop-blur-sm border border-border rounded-full p-3 shadow-lg hover:bg-accent transition-colors"
-          title="Go to my location"
-        >
-          <Locate className="h-5 w-5 text-primary" />
-        </button>
-      </div>
-    </div>
+    />
   );
 };

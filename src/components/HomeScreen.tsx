@@ -107,20 +107,7 @@ export const HomeScreen = ({
   const [destinationName, setDestinationName] = useState<string>('');
   const [isMapExpanded, setIsMapExpanded] = useState(false);
   const [transportMode, setTransportMode] = useState<TransportMode>('metro');
-  const [mapTheme, setMapTheme] = useState<MapTheme>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('mapTheme') as MapTheme;
-      if (stored && ['dark', 'light', 'satellite', 'traffic'].includes(stored)) {
-        return stored;
-      }
-    }
-    return 'dark';
-  });
-
-  // Persist map theme to localStorage
-  useEffect(() => {
-    localStorage.setItem('mapTheme', mapTheme);
-  }, [mapTheme]);
+  const [mapTheme, setMapTheme] = useState<MapTheme>('dark');
 
   // Update destination name when destination changes from map selection
   useEffect(() => {
