@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Locate, Compass, Sun, Moon, Satellite, ZoomIn, ZoomOut } from 'lucide-react';
+import { Locate, Compass } from 'lucide-react';
 
 // Fix for default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -89,10 +89,9 @@ interface MapProps {
   isAlarmActive: boolean;
   showRoute?: boolean;
   theme?: MapTheme;
-  onThemeChange?: (theme: MapTheme) => void;
 }
 
-export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isAlarmActive, showRoute = true, theme = 'dark', onThemeChange }: MapProps) => {
+export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isAlarmActive, showRoute = true, theme = 'dark' }: MapProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const currentMarkerRef = useRef<L.Marker | null>(null);
@@ -261,34 +260,6 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
     }
   };
 
-  const handleThemeToggle = () => {
-    if (!onThemeChange) return;
-    const themes: MapTheme[] = ['dark', 'light', 'satellite'];
-    const currentIndex = themes.indexOf(theme);
-    const nextIndex = (currentIndex + 1) % themes.length;
-    onThemeChange(themes[nextIndex]);
-  };
-
-  const handleZoomIn = () => {
-    if (mapRef.current) {
-      mapRef.current.zoomIn(1, { animate: true });
-    }
-  };
-
-  const handleZoomOut = () => {
-    if (mapRef.current) {
-      mapRef.current.zoomOut(1, { animate: true });
-    }
-  };
-
-  const getThemeIcon = () => {
-    switch (theme) {
-      case 'light': return <Sun className="h-5 w-5 text-primary" />;
-      case 'satellite': return <Satellite className="h-5 w-5 text-primary" />;
-      default: return <Moon className="h-5 w-5 text-primary" />;
-    }
-  };
-
   return (
     <div 
       ref={mapContainerRef} 
@@ -296,29 +267,6 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
       style={{ background: themeConfig.background }}
     >
       <div className="absolute bottom-4 right-4 z-[1000] flex flex-col gap-2">
-        {onThemeChange && (
-          <button
-            onClick={handleThemeToggle}
-            className="bg-background/90 backdrop-blur-sm border border-border rounded-full p-3 shadow-lg hover:bg-accent transition-colors"
-            title={`Theme: ${theme}`}
-          >
-            {getThemeIcon()}
-          </button>
-        )}
-        <button
-          onClick={handleZoomIn}
-          className="bg-background/90 backdrop-blur-sm border border-border rounded-full p-3 shadow-lg hover:bg-accent transition-colors"
-          title="Zoom in"
-        >
-          <ZoomIn className="h-5 w-5 text-primary" />
-        </button>
-        <button
-          onClick={handleZoomOut}
-          className="bg-background/90 backdrop-blur-sm border border-border rounded-full p-3 shadow-lg hover:bg-accent transition-colors"
-          title="Zoom out"
-        >
-          <ZoomOut className="h-5 w-5 text-primary" />
-        </button>
         <button
           onClick={handleCompassClick}
           className="bg-background/90 backdrop-blur-sm border border-border rounded-full p-3 shadow-lg hover:bg-accent transition-colors"

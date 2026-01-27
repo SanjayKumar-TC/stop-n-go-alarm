@@ -1,7 +1,6 @@
-import { useState } from 'react';
 import { ArrowLeft, MapPin, Clock, Navigation } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Map, MapTheme } from '@/components/Map';
+import { Map } from '@/components/Map';
 import { LocationSearch } from '@/components/LocationSearch';
 import { formatDistance, calculateDistance } from '@/hooks/useGeolocation';
 
@@ -40,8 +39,6 @@ export const MapView = ({
   onConfirm,
   onSearchSelect,
 }: MapViewProps) => {
-  const [mapTheme, setMapTheme] = useState<MapTheme>('dark');
-  
   const distance = currentPosition && destination
     ? calculateDistance(currentPosition.lat, currentPosition.lng, destination.lat, destination.lng)
     : null;
@@ -55,8 +52,6 @@ export const MapView = ({
         alertRadius={alertRadius}
         onMapClick={onMapClick}
         isAlarmActive={isAlarmActive}
-        theme={mapTheme}
-        onThemeChange={setMapTheme}
       />
 
       {/* Header with back button and search */}
