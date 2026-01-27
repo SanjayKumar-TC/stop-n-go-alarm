@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Locate, Compass } from 'lucide-react';
+import { Locate, Compass, Plus, Minus } from 'lucide-react';
 
 // Fix for default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -260,6 +260,18 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
     }
   };
 
+  const handleZoomIn = () => {
+    if (mapRef.current) {
+      mapRef.current.zoomIn();
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (mapRef.current) {
+      mapRef.current.zoomOut();
+    }
+  };
+
   return (
     <div 
       ref={mapContainerRef} 
@@ -274,6 +286,22 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
         >
           <Compass className="h-5 w-5 text-primary" />
         </button>
+        <div className="flex flex-col bg-background/90 backdrop-blur-sm border border-border rounded-full shadow-lg overflow-hidden">
+          <button
+            onClick={handleZoomIn}
+            className="p-3 hover:bg-accent transition-colors border-b border-border"
+            title="Zoom in"
+          >
+            <Plus className="h-5 w-5 text-primary" />
+          </button>
+          <button
+            onClick={handleZoomOut}
+            className="p-3 hover:bg-accent transition-colors"
+            title="Zoom out"
+          >
+            <Minus className="h-5 w-5 text-primary" />
+          </button>
+        </div>
         <button
           onClick={handleLocateClick}
           className="bg-background/90 backdrop-blur-sm border border-border rounded-full p-3 shadow-lg hover:bg-accent transition-colors"
