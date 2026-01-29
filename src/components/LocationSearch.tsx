@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Search, X, MapPin, Loader2, Clock, Navigation, Building2, TreePine, Train, ShoppingBag, Bus, TrainFront } from 'lucide-react';
+import { Search, X, MapPin, Loader2, Clock, Navigation, Building2, TreePine, Train, ShoppingBag, Bus, TrainFront, Hospital, Hotel, UtensilsCrossed, GraduationCap } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { calculateDistance, formatDistance } from '@/hooks/useGeolocation';
@@ -14,6 +14,10 @@ interface SearchResult {
   importance?: number;
   isMetro?: boolean;
   isBusStop?: boolean;
+  isHospital?: boolean;
+  isHotel?: boolean;
+  isRestaurant?: boolean;
+  isEducation?: boolean;
   address?: {
     city?: string;
     town?: string;
@@ -41,11 +45,8 @@ const isMetroStation = (name: string, type?: string, placeClass?: string): boole
   const typeLower = (type || '').toLowerCase();
   const classLower = (placeClass || '').toLowerCase();
   
-  // Metro station keywords
   const metroKeywords = ['metro', 'metro station', 'namma metro', 'purple line', 'green line', 'bmrcl'];
   const hasMetroKeyword = metroKeywords.some(kw => nameLower.includes(kw));
-  
-  // Check type/class for subway/metro indicators
   const isMetroType = typeLower.includes('subway') || typeLower.includes('metro') || 
                       classLower.includes('subway') || classLower === 'railway';
   
@@ -58,55 +59,98 @@ const isBMTCBusStop = (name: string, type?: string, placeClass?: string): boolea
   const typeLower = (type || '').toLowerCase();
   const classLower = (placeClass || '').toLowerCase();
   
-  // Bus stop keywords
-  const busKeywords = ['bmtc', 'bus stop', 'bus station', 'bus stand', 'bus terminal', 'bus depot', 'ttmc', 'kbs', 'majestic'];
+  const busKeywords = ['bmtc', 'bus stop', 'bus station', 'bus stand', 'bus terminal', 'bus depot', 'ttmc', 'kbs'];
   const hasBusKeyword = busKeywords.some(kw => nameLower.includes(kw));
-  
-  // Check type/class for bus indicators
   const isBusType = typeLower.includes('bus') || classLower.includes('bus') || 
                     typeLower === 'bus_stop' || typeLower === 'bus_station';
   
   return hasBusKeyword || isBusType;
 };
 
-// Get icon based on place type with metro and bus priority
-const getPlaceIcon = (result: SearchResult) => {
-  // Priority 1: Metro station
-  if (result.isMetro) {
-    return <TrainFront className="w-4 h-4" />;
-  }
+// Check if result is a hospital/medical facility
+const isHospitalPlace = (name: string, type?: string, placeClass?: string): boolean => {
+  const nameLower = name.toLowerCase();
+  const typeLower = (type || '').toLowerCase();
+  const classLower = (placeClass || '').toLowerCase();
   
-  // Priority 2: Bus stop
-  if (result.isBusStop) {
-    return <Bus className="w-4 h-4" />;
-  }
+  const hospitalKeywords = ['hospital', 'clinic', 'medical', 'healthcare', 'health center', 'nursing home', 'pharmacy', 'diagnostic', 'lab'];
+  const hasHospitalKeyword = hospitalKeywords.some(kw => nameLower.includes(kw));
+  const isHospitalType = typeLower === 'hospital' || typeLower === 'clinic' || typeLower === 'pharmacy' ||
+                         classLower === 'healthcare' || classLower === 'amenity' && typeLower.includes('hospital');
+  
+  return hasHospitalKeyword || isHospitalType;
+};
+
+// Check if result is a hotel/accommodation
+const isHotelPlace = (name: string, type?: string, placeClass?: string): boolean => {
+  const nameLower = name.toLowerCase();
+  const typeLower = (type || '').toLowerCase();
+  const classLower = (placeClass || '').toLowerCase();
+  
+  const hotelKeywords = ['hotel', 'resort', 'inn', 'lodge', 'motel', 'guest house', 'hostel', 'oyo', 'treebo', 'fab'];
+  const hasHotelKeyword = hotelKeywords.some(kw => nameLower.includes(kw));
+  const isHotelType = typeLower === 'hotel' || typeLower === 'guest_house' || typeLower === 'hostel' ||
+                      classLower === 'tourism' && (typeLower.includes('hotel') || typeLower.includes('guest'));
+  
+  return hasHotelKeyword || isHotelType;
+};
+
+// Check if result is a restaurant/food place
+const isRestaurantPlace = (name: string, type?: string, placeClass?: string): boolean => {
+  const nameLower = name.toLowerCase();
+  const typeLower = (type || '').toLowerCase();
+  const classLower = (placeClass || '').toLowerCase();
+  
+  const restaurantKeywords = ['restaurant', 'cafe', 'coffee', 'food', 'dhaba', 'eatery', 'bistro', 'kitchen', 'dining', 'biryani', 'pizza', 'burger', 'bakery', 'sweets'];
+  const hasRestaurantKeyword = restaurantKeywords.some(kw => nameLower.includes(kw));
+  const isRestaurantType = typeLower === 'restaurant' || typeLower === 'cafe' || typeLower === 'fast_food' ||
+                           typeLower === 'food_court' || classLower === 'amenity' && typeLower.includes('restaurant');
+  
+  return hasRestaurantKeyword || isRestaurantType;
+};
+
+// Check if result is an educational institution
+const isEducationPlace = (name: string, type?: string, placeClass?: string): boolean => {
+  const nameLower = name.toLowerCase();
+  const typeLower = (type || '').toLowerCase();
+  const classLower = (placeClass || '').toLowerCase();
+  
+  const educationKeywords = ['school', 'college', 'university', 'institute', 'academy', 'vidyalaya', 'vidya', 'shala', 'campus', 'polytechnic', 'iit', 'iim', 'nit'];
+  const hasEducationKeyword = educationKeywords.some(kw => nameLower.includes(kw));
+  const isEducationType = typeLower === 'school' || typeLower === 'college' || typeLower === 'university' ||
+                          classLower === 'amenity' && (typeLower.includes('school') || typeLower.includes('college'));
+  
+  return hasEducationKeyword || isEducationType;
+};
+
+// Get icon based on place type
+const getPlaceIcon = (result: SearchResult) => {
+  if (result.isMetro) return <TrainFront className="w-4 h-4" />;
+  if (result.isBusStop) return <Bus className="w-4 h-4" />;
+  if (result.isHospital) return <Hospital className="w-4 h-4" />;
+  if (result.isHotel) return <Hotel className="w-4 h-4" />;
+  if (result.isRestaurant) return <UtensilsCrossed className="w-4 h-4" />;
+  if (result.isEducation) return <GraduationCap className="w-4 h-4" />;
   
   const t = result.type?.toLowerCase() || '';
   const c = result.class?.toLowerCase() || '';
   
-  if (c === 'railway' || t.includes('station') || t.includes('rail')) {
-    return <Train className="w-4 h-4" />;
-  }
-  if (c === 'shop' || t.includes('mall') || t.includes('market')) {
-    return <ShoppingBag className="w-4 h-4" />;
-  }
-  if (c === 'building' || t.includes('office') || t.includes('commercial')) {
-    return <Building2 className="w-4 h-4" />;
-  }
-  if (c === 'natural' || t.includes('park') || t.includes('garden')) {
-    return <TreePine className="w-4 h-4" />;
-  }
+  if (c === 'railway' || t.includes('station') || t.includes('rail')) return <Train className="w-4 h-4" />;
+  if (c === 'shop' || t.includes('mall') || t.includes('market')) return <ShoppingBag className="w-4 h-4" />;
+  if (c === 'building' || t.includes('office') || t.includes('commercial')) return <Building2 className="w-4 h-4" />;
+  if (c === 'natural' || t.includes('park') || t.includes('garden')) return <TreePine className="w-4 h-4" />;
+  
   return <MapPin className="w-4 h-4" />;
 };
 
 // Get icon background color based on type
 const getIconStyles = (result: SearchResult): string => {
-  if (result.isMetro) {
-    return 'bg-purple-500/20 text-purple-600 dark:text-purple-400';
-  }
-  if (result.isBusStop) {
-    return 'bg-green-500/20 text-green-600 dark:text-green-400';
-  }
+  if (result.isMetro) return 'bg-purple-500/20 text-purple-600 dark:text-purple-400';
+  if (result.isBusStop) return 'bg-green-500/20 text-green-600 dark:text-green-400';
+  if (result.isHospital) return 'bg-red-500/20 text-red-600 dark:text-red-400';
+  if (result.isHotel) return 'bg-blue-500/20 text-blue-600 dark:text-blue-400';
+  if (result.isRestaurant) return 'bg-orange-500/20 text-orange-600 dark:text-orange-400';
+  if (result.isEducation) return 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400';
   return 'bg-muted text-muted-foreground';
 };
 
@@ -189,6 +233,10 @@ export const LocationSearch = ({
               class: placeClass,
               isMetro: isMetroStation(displayName, type, placeClass),
               isBusStop: isBMTCBusStop(displayName, type, placeClass),
+              isHospital: isHospitalPlace(displayName, type, placeClass),
+              isHotel: isHotelPlace(displayName, type, placeClass),
+              isRestaurant: isRestaurantPlace(displayName, type, placeClass),
+              isEducation: isEducationPlace(displayName, type, placeClass),
               address: {
                 city: feature.properties.city,
                 town: feature.properties.town,
@@ -232,11 +280,15 @@ export const LocationSearch = ({
       )
         .then(res => res.json())
         .then((data: any[]) => {
-          // Add metro/bus detection to Nominatim results
+          // Add place type detection to Nominatim results
           return data.map((item: any) => ({
             ...item,
             isMetro: isMetroStation(item.display_name, item.type, item.class),
             isBusStop: isBMTCBusStop(item.display_name, item.type, item.class),
+            isHospital: isHospitalPlace(item.display_name, item.type, item.class),
+            isHotel: isHotelPlace(item.display_name, item.type, item.class),
+            isRestaurant: isRestaurantPlace(item.display_name, item.type, item.class),
+            isEducation: isEducationPlace(item.display_name, item.type, item.class),
           }));
         })
         .catch(() => []);
