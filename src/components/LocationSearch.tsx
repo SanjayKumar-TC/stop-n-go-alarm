@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Search, X, MapPin, Loader2, Clock, Navigation, Building2, TreePine, Train, ShoppingBag } from 'lucide-react';
+import { Search, X, MapPin, Loader2, Clock, Navigation, Building2, TreePine, Train, ShoppingBag, Bus, TrainFront } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { calculateDistance, formatDistance } from '@/hooks/useGeolocation';
@@ -12,6 +12,8 @@ interface SearchResult {
   type?: string;
   class?: string;
   importance?: number;
+  isMetro?: boolean;
+  isBusStop?: boolean;
   address?: {
     city?: string;
     town?: string;
@@ -33,24 +35,79 @@ interface LocationSearchProps {
   currentPosition?: { lat: number; lng: number } | null;
 }
 
-// Get icon based on place type
-const getPlaceIcon = (type?: string, placeClass?: string) => {
-  const t = type?.toLowerCase() || '';
-  const c = placeClass?.toLowerCase() || '';
+// Check if result is a metro station
+const isMetroStation = (name: string, type?: string, placeClass?: string): boolean => {
+  const nameLower = name.toLowerCase();
+  const typeLower = (type || '').toLowerCase();
+  const classLower = (placeClass || '').toLowerCase();
+  
+  // Metro station keywords
+  const metroKeywords = ['metro', 'metro station', 'namma metro', 'purple line', 'green line', 'bmrcl'];
+  const hasMetroKeyword = metroKeywords.some(kw => nameLower.includes(kw));
+  
+  // Check type/class for subway/metro indicators
+  const isMetroType = typeLower.includes('subway') || typeLower.includes('metro') || 
+                      classLower.includes('subway') || classLower === 'railway';
+  
+  return hasMetroKeyword || isMetroType;
+};
+
+// Check if result is a BMTC bus stop
+const isBMTCBusStop = (name: string, type?: string, placeClass?: string): boolean => {
+  const nameLower = name.toLowerCase();
+  const typeLower = (type || '').toLowerCase();
+  const classLower = (placeClass || '').toLowerCase();
+  
+  // Bus stop keywords
+  const busKeywords = ['bmtc', 'bus stop', 'bus station', 'bus stand', 'bus terminal', 'bus depot', 'ttmc', 'kbs', 'majestic'];
+  const hasBusKeyword = busKeywords.some(kw => nameLower.includes(kw));
+  
+  // Check type/class for bus indicators
+  const isBusType = typeLower.includes('bus') || classLower.includes('bus') || 
+                    typeLower === 'bus_stop' || typeLower === 'bus_station';
+  
+  return hasBusKeyword || isBusType;
+};
+
+// Get icon based on place type with metro and bus priority
+const getPlaceIcon = (result: SearchResult) => {
+  // Priority 1: Metro station
+  if (result.isMetro) {
+    return <TrainFront className="w-4 h-4" />;
+  }
+  
+  // Priority 2: Bus stop
+  if (result.isBusStop) {
+    return <Bus className="w-4 h-4" />;
+  }
+  
+  const t = result.type?.toLowerCase() || '';
+  const c = result.class?.toLowerCase() || '';
   
   if (c === 'railway' || t.includes('station') || t.includes('rail')) {
-    return <Train className="w-5 h-5" />;
+    return <Train className="w-4 h-4" />;
   }
   if (c === 'shop' || t.includes('mall') || t.includes('market')) {
-    return <ShoppingBag className="w-5 h-5" />;
+    return <ShoppingBag className="w-4 h-4" />;
   }
   if (c === 'building' || t.includes('office') || t.includes('commercial')) {
-    return <Building2 className="w-5 h-5" />;
+    return <Building2 className="w-4 h-4" />;
   }
   if (c === 'natural' || t.includes('park') || t.includes('garden')) {
-    return <TreePine className="w-5 h-5" />;
+    return <TreePine className="w-4 h-4" />;
   }
-  return <MapPin className="w-5 h-5" />;
+  return <MapPin className="w-4 h-4" />;
+};
+
+// Get icon background color based on type
+const getIconStyles = (result: SearchResult): string => {
+  if (result.isMetro) {
+    return 'bg-purple-500/20 text-purple-600 dark:text-purple-400';
+  }
+  if (result.isBusStop) {
+    return 'bg-green-500/20 text-green-600 dark:text-green-400';
+  }
+  return 'bg-muted text-muted-foreground';
 };
 
 export const LocationSearch = ({
@@ -118,23 +175,31 @@ export const LocationSearch = ({
         .then(res => res.json())
         .then(data => {
           // Convert Photon format to our format
-          return (data.features || []).map((feature: any) => ({
-            place_id: feature.properties.osm_id || Math.random(),
-            display_name: formatPhotonResult(feature.properties),
-            lat: feature.geometry.coordinates[1].toString(),
-            lon: feature.geometry.coordinates[0].toString(),
-            type: feature.properties.type || feature.properties.osm_value,
-            class: feature.properties.osm_key,
-            address: {
-              city: feature.properties.city,
-              town: feature.properties.town,
-              village: feature.properties.village,
-              state: feature.properties.state,
-              country: feature.properties.country,
-              road: feature.properties.street,
-              suburb: feature.properties.suburb || feature.properties.district,
-            },
-          }));
+          return (data.features || []).map((feature: any) => {
+            const displayName = formatPhotonResult(feature.properties);
+            const type = feature.properties.type || feature.properties.osm_value;
+            const placeClass = feature.properties.osm_key;
+            
+            return {
+              place_id: feature.properties.osm_id || Math.random(),
+              display_name: displayName,
+              lat: feature.geometry.coordinates[1].toString(),
+              lon: feature.geometry.coordinates[0].toString(),
+              type,
+              class: placeClass,
+              isMetro: isMetroStation(displayName, type, placeClass),
+              isBusStop: isBMTCBusStop(displayName, type, placeClass),
+              address: {
+                city: feature.properties.city,
+                town: feature.properties.town,
+                village: feature.properties.village,
+                state: feature.properties.state,
+                country: feature.properties.country,
+                road: feature.properties.street,
+                suburb: feature.properties.suburb || feature.properties.district,
+              },
+            };
+          });
         })
         .catch(() => []);
 
@@ -166,6 +231,14 @@ export const LocationSearch = ({
         }
       )
         .then(res => res.json())
+        .then((data: any[]) => {
+          // Add metro/bus detection to Nominatim results
+          return data.map((item: any) => ({
+            ...item,
+            isMetro: isMetroStation(item.display_name, item.type, item.class),
+            isBusStop: isBMTCBusStop(item.display_name, item.type, item.class),
+          }));
+        })
         .catch(() => []);
 
       searches.push(nominatimSearch);
@@ -334,9 +407,9 @@ export const LocationSearch = ({
                     ${index !== results.length - 1 ? 'border-b border-border/50' : ''}
                   `}
                 >
-                  {/* Icon container */}
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-                    {getPlaceIcon(result.type, result.class)}
+                  {/* Icon container - different colors for metro/bus */}
+                  <div className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center ${getIconStyles(result)}`}>
+                    {getPlaceIcon(result)}
                   </div>
                   
                   {/* Text content */}
