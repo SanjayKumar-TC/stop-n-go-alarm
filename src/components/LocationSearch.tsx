@@ -8,6 +8,17 @@ interface SearchResult {
   display_name: string;
   lat: string;
   lon: string;
+  type?: string;
+  class?: string;
+  address?: {
+    city?: string;
+    town?: string;
+    village?: string;
+    state?: string;
+    country?: string;
+    road?: string;
+    suburb?: string;
+  };
 }
 
 interface LocationSearchProps {
@@ -50,18 +61,31 @@ export const LocationSearch = ({
   }, []);
 
   const searchPlaces = useCallback(async (searchQuery: string) => {
-    if (searchQuery.length < 3) {
+    if (searchQuery.length < 2) {
       setResults([]);
       return;
     }
 
     setIsLoading(true);
     try {
+      // Enhanced Nominatim search with more results and better parameters
+      const params = new URLSearchParams({
+        format: 'json',
+        q: searchQuery,
+        limit: '10', // Increased from 5
+        addressdetails: '1', // Get detailed address components
+        extratags: '1', // Get additional place info
+        namedetails: '1', // Get all name variants
+        'accept-language': 'en', // Consistent language
+        dedupe: '1', // Remove duplicates
+      });
+
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=5`,
+        `https://nominatim.openstreetmap.org/search?${params.toString()}`,
         {
           headers: {
             'Accept': 'application/json',
+            'User-Agent': 'GPSTravelAlarm/1.0', // Required by Nominatim
           },
         }
       );
@@ -143,19 +167,39 @@ export const LocationSearch = ({
 
       {/* Search Results Dropdown */}
       {showResults && results.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden">
-          {results.map((result) => (
-            <button
-              key={result.place_id}
-              onClick={() => handleSelectResult(result)}
-              className="w-full flex items-start gap-3 p-3 hover:bg-muted/50 transition-colors text-left border-b border-border last:border-0"
-            >
-              <MapPin className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-              <span className="text-sm text-foreground line-clamp-2">
-                {result.display_name}
-              </span>
-            </button>
-          ))}
+        <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden max-h-80 overflow-y-auto">
+          {results.map((result) => {
+            // Format a cleaner display name
+            const parts = result.display_name.split(',');
+            const primaryName = parts[0]?.trim();
+            const secondaryInfo = parts.slice(1, 3).join(',').trim();
+            
+            // Get place type icon indicator
+            const placeType = result.type?.replace(/_/g, ' ') || result.class || '';
+            
+            return (
+              <button
+                key={result.place_id}
+                onClick={() => handleSelectResult(result)}
+                className="w-full flex items-start gap-3 p-3 hover:bg-muted/50 transition-colors text-left border-b border-border last:border-0"
+              >
+                <MapPin className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {primaryName}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {secondaryInfo}
+                  </p>
+                  {placeType && (
+                    <span className="inline-block mt-1 text-[10px] uppercase tracking-wide text-muted-foreground/70 bg-muted px-1.5 py-0.5 rounded">
+                      {placeType}
+                    </span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
         </div>
       )}
 
