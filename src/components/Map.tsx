@@ -18,26 +18,32 @@ interface MapThemeConfig {
   background: string;
 }
 
-const MAP_THEMES: Record<MapTheme, MapThemeConfig> = {
+// High-quality map themes with clear labels like Google Maps
+const MAP_THEMES: Record<MapTheme, MapThemeConfig & { labelsUrl?: string }> = {
   dark: {
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    // Stadia Alidade Smooth Dark - crisp labels, high quality
+    url: 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
     background: 'hsl(220, 25%, 8%)',
   },
   light: {
-    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    background: 'hsl(0, 0%, 95%)',
+    // Stadia Alidade Smooth - Google Maps-like appearance with clear labels
+    url: 'https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+    background: 'hsl(0, 0%, 98%)',
   },
   satellite: {
+    // Esri satellite with labels overlay
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attribution: '&copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics',
+    labelsUrl: 'https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+    attribution: '&copy; Esri, Maxar, Earthstar Geographics',
     background: 'hsl(220, 25%, 15%)',
   },
   traffic: {
-    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    background: 'hsl(0, 0%, 90%)',
+    // Stadia OSM Bright - colorful with prominent road names
+    url: 'https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+    background: 'hsl(0, 0%, 95%)',
   },
 };
 
@@ -98,6 +104,7 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
   const circleRef = useRef<L.Circle | null>(null);
   const routeLineRef = useRef<L.Polyline | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const labelsLayerRef = useRef<L.TileLayer | null>(null);
   const hasInitializedRef = useRef(false);
 
   const themeConfig = MAP_THEMES[theme];
@@ -117,10 +124,20 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
       zoomControl: true,
     });
 
-    // Initial tile layer
+    // Initial tile layer with retina support
     tileLayerRef.current = L.tileLayer(themeConfig.url, {
       attribution: themeConfig.attribution,
+      maxZoom: 20,
+      tileSize: 256,
     }).addTo(map);
+
+    // Add labels layer for satellite view
+    if (themeConfig.labelsUrl) {
+      labelsLayerRef.current = L.tileLayer(themeConfig.labelsUrl, {
+        maxZoom: 20,
+        tileSize: 256,
+      }).addTo(map);
+    }
 
     // Handle map clicks
     map.on('click', (e: L.LeafletMouseEvent) => {
@@ -139,15 +156,29 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // Remove old tile layer
+    // Remove old tile layers
     if (tileLayerRef.current) {
       tileLayerRef.current.remove();
     }
+    if (labelsLayerRef.current) {
+      labelsLayerRef.current.remove();
+      labelsLayerRef.current = null;
+    }
 
-    // Add new tile layer
+    // Add new tile layer with retina support
     tileLayerRef.current = L.tileLayer(themeConfig.url, {
       attribution: themeConfig.attribution,
+      maxZoom: 20,
+      tileSize: 256,
     }).addTo(mapRef.current);
+
+    // Add labels layer for satellite view
+    if (themeConfig.labelsUrl) {
+      labelsLayerRef.current = L.tileLayer(themeConfig.labelsUrl, {
+        maxZoom: 20,
+        tileSize: 256,
+      }).addTo(mapRef.current);
+    }
   }, [theme, themeConfig]);
 
   // Update click handler when onMapClick changes
