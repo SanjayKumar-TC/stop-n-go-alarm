@@ -47,19 +47,22 @@ const MAP_THEMES: Record<MapTheme, MapThemeConfig & { labelsUrl?: string }> = {
   },
 };
 
-// Custom icons
+// Custom icons with high z-index for visibility
 const createCurrentLocationIcon = () => L.divIcon({
-  className: 'custom-marker',
-  html: `<div style="
-    width: 20px;
-    height: 20px;
-    background: hsl(174, 72%, 50%);
-    border: 3px solid white;
-    border-radius: 50%;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-  "></div>`,
-  iconSize: [20, 20],
-  iconAnchor: [10, 10],
+  className: 'current-location-marker',
+  html: `<div class="location-pulse-ring"></div>
+    <div style="
+      position: relative;
+      width: 22px;
+      height: 22px;
+      background: linear-gradient(135deg, hsl(174, 72%, 55%), hsl(174, 72%, 45%));
+      border: 3px solid white;
+      border-radius: 50%;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5), 0 0 0 2px rgba(45, 180, 165, 0.3);
+      z-index: 1000;
+    "></div>`,
+  iconSize: [22, 22],
+  iconAnchor: [11, 11],
 });
 
 const createDestinationIcon = () => L.divIcon({

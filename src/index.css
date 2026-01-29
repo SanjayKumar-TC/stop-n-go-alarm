@@ -224,3 +224,42 @@
 .leaflet-control-attribution a {
   color: hsl(var(--primary)) !important;
 }
+
+/* Current location marker with pulse animation */
+.current-location-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.location-pulse-ring {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: rgba(45, 180, 165, 0.3);
+  animation: location-pulse 2s ease-out infinite;
+  z-index: 999;
+}
+
+@keyframes location-pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Ensure markers are above tiles */
+.leaflet-marker-pane {
+  z-index: 600 !important;
+}
+
+.leaflet-marker-icon {
+  z-index: 600 !important;
+}
