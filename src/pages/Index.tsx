@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { HomeScreen } from '@/components/HomeScreen';
 import { MapView } from '@/components/MapView';
 import { SettingsScreen } from '@/components/SettingsScreen';
-import { useGeolocation, calculateDistance } from '@/hooks/useGeolocation';
-import { useAlarm, AlarmSettings } from '@/hooks/useAlarm';
+import { useNativeGeolocation } from '@/hooks/useNativeGeolocation';
+import { calculateDistance } from '@/hooks/useGeolocation';
+import { useNativeAlarm, AlarmSettings } from '@/hooks/useNativeAlarm';
 import { useFavorites, FavoriteDestination } from '@/hooks/useFavorites';
 import { useTripHistory } from '@/hooks/useTripHistory';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
@@ -27,7 +28,17 @@ const Index = () => {
   const currentTripIdRef = useRef<string | null>(null);
   
   const { toast } = useToast();
-  const { position, error, isLoading, startWatching, stopWatching, requestPosition } = useGeolocation();
+  const { 
+    position, 
+    error, 
+    isLoading, 
+    startWatching, 
+    stopWatching, 
+    requestPosition,
+    startBackgroundTracking,
+    stopBackgroundTracking,
+    isNative,
+  } = useNativeGeolocation();
   const { 
     isActive: isAlarmActive, 
     isRinging: isAlarmRinging, 
@@ -38,7 +49,7 @@ const Index = () => {
     activateAlarm, 
     deactivateAlarm,
     testAlarm,
-  } = useAlarm();
+  } = useNativeAlarm();
   const { favorites, addFavorite, removeFavorite } = useFavorites();
   const { trips, startTrip, endTrip, deleteTrip, clearHistory } = useTripHistory();
   const { 
@@ -49,9 +60,7 @@ const Index = () => {
     showTrackingStarted,
   } = usePushNotifications();
 
-  const currentPosition = position
-    ? { lat: position.coords.latitude, lng: position.coords.longitude }
-    : null;
+  const currentPosition = position;
 
   const handleMapClick = useCallback((lat: number, lng: number) => {
     if (isAlarmActive) return;
@@ -70,7 +79,11 @@ const Index = () => {
     // Auto-stop tracking when destination is cleared
     if (isAlarmActive) {
       deactivateAlarm();
-      stopWatching();
+      if (isNative) {
+        stopBackgroundTracking();
+      } else {
+        stopWatching();
+      }
       if (currentTripIdRef.current) {
         endTrip(currentTripIdRef.current, false);
         currentTripIdRef.current = null;
@@ -82,7 +95,7 @@ const Index = () => {
     }
     setDestination(null);
     setDistanceToDestination(null);
-  }, [isAlarmActive, deactivateAlarm, stopWatching, endTrip, toast]);
+  }, [isAlarmActive, deactivateAlarm, stopWatching, stopBackgroundTracking, isNative, endTrip, toast]);
 
   const handleOpenMapForDestination = useCallback(() => {
     setMapSelectionMode('destination');
@@ -127,7 +140,21 @@ const Index = () => {
     currentTripIdRef.current = trip.id;
 
     activateAlarm();
-    startWatching();
+    
+    // Use background tracking on native, regular watching on web
+    if (isNative) {
+      startBackgroundTracking((lat, lng) => {
+        // This callback handles location updates in background
+        if (destination) {
+          const distance = calculateDistance(lat, lng, destination.lat, destination.lng);
+          if (distance <= alertRadius && !isAlarmRinging) {
+            triggerAlarm(destinationName);
+          }
+        }
+      });
+    } else {
+      startWatching();
+    }
     
     // Show push notification for tracking started
     showTrackingStarted(destinationName, alertRadius);
@@ -136,11 +163,15 @@ const Index = () => {
       title: "Alarm Activated",
       description: `You'll be alerted when within ${alertRadius < 1000 ? alertRadius + 'm' : (alertRadius / 1000).toFixed(1) + 'km'} of your destination`,
     });
-  }, [destination, currentPosition, alertRadius, activateAlarm, startWatching, startTrip, notificationPermission, requestNotificationPermission, showTrackingStarted, toast]);
+  }, [destination, currentPosition, alertRadius, activateAlarm, startWatching, startBackgroundTracking, isNative, startTrip, notificationPermission, requestNotificationPermission, showTrackingStarted, triggerAlarm, isAlarmRinging, toast]);
 
   const handleDeactivateAlarm = useCallback(() => {
     deactivateAlarm();
-    stopWatching();
+    if (isNative) {
+      stopBackgroundTracking();
+    } else {
+      stopWatching();
+    }
     
     // End trip as incomplete
     if (currentTripIdRef.current) {
@@ -152,14 +183,18 @@ const Index = () => {
       title: "Alarm Deactivated",
       description: "Location tracking stopped",
     });
-  }, [deactivateAlarm, stopWatching, endTrip, toast]);
+  }, [deactivateAlarm, stopWatching, stopBackgroundTracking, isNative, endTrip, toast]);
 
   const handleStopAlarm = useCallback(() => {
     const destinationName = destination?.name || 'your destination';
     
     stopAlarm();
     deactivateAlarm();
-    stopWatching();
+    if (isNative) {
+      stopBackgroundTracking();
+    } else {
+      stopWatching();
+    }
     
     // End trip as completed
     if (currentTripIdRef.current) {
@@ -176,7 +211,7 @@ const Index = () => {
       title: "👋 Hope you didn't miss your stop!",
       description: "Have a great day ahead!",
     });
-  }, [stopAlarm, deactivateAlarm, stopWatching, endTrip, destination, showArrivalConfirmation, toast]);
+  }, [stopAlarm, deactivateAlarm, stopWatching, stopBackgroundTracking, isNative, endTrip, destination, showArrivalConfirmation, toast]);
 
   const handleOpenSettings = useCallback(() => {
     setViewMode('settings');
@@ -238,7 +273,7 @@ const Index = () => {
     if (error) {
       toast({
         title: "Location Error",
-        description: error.message || "Unable to get your location. Please enable GPS.",
+        description: error || "Unable to get your location. Please enable GPS.",
         variant: "destructive",
       });
     }
