@@ -108,6 +108,8 @@ export const HomeScreen = ({
   const [isMapExpanded, setIsMapExpanded] = useState(false);
   const [transportMode, setTransportMode] = useState<TransportMode>('metro');
   const [mapTheme, setMapTheme] = useState<MapTheme>('dark');
+  const [currentLocationName, setCurrentLocationName] = useState<string>('');
+  const [isLoadingLocationName, setIsLoadingLocationName] = useState(false);
 
   // Update destination name when destination changes from map selection
   useEffect(() => {
@@ -117,6 +119,62 @@ export const HomeScreen = ({
       setDestinationName('');
     }
   }, [destination]);
+
+  // Reverse geocode current position to get location name
+  useEffect(() => {
+    if (!currentPosition) {
+      setCurrentLocationName('');
+      return;
+    }
+
+    const fetchLocationName = async () => {
+      setIsLoadingLocationName(true);
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${currentPosition.lat}&lon=${currentPosition.lng}&zoom=18&addressdetails=1`,
+          {
+            headers: {
+              'Accept-Language': 'en',
+            },
+          }
+        );
+        const data = await response.json();
+        
+        if (data && data.address) {
+          // Build a readable name from address components
+          const parts: string[] = [];
+          const addr = data.address;
+          
+          // Priority: specific location name, then street, then area
+          if (addr.building || addr.amenity || addr.shop) {
+            parts.push(addr.building || addr.amenity || addr.shop);
+          }
+          if (addr.road || addr.street) {
+            parts.push(addr.road || addr.street);
+          }
+          if (addr.suburb || addr.neighbourhood) {
+            parts.push(addr.suburb || addr.neighbourhood);
+          }
+          if (addr.city || addr.town || addr.village) {
+            parts.push(addr.city || addr.town || addr.village);
+          }
+          
+          // Take first 2-3 components for a concise name
+          const locationName = parts.slice(0, 3).join(', ') || data.display_name?.split(',').slice(0, 2).join(',') || 'Unknown Location';
+          setCurrentLocationName(locationName);
+        } else {
+          setCurrentLocationName(`${currentPosition.lat.toFixed(4)}, ${currentPosition.lng.toFixed(4)}`);
+        }
+      } catch (error) {
+        console.error('Reverse geocoding error:', error);
+        setCurrentLocationName(`${currentPosition.lat.toFixed(4)}, ${currentPosition.lng.toFixed(4)}`);
+      } finally {
+        setIsLoadingLocationName(false);
+      }
+    };
+
+    fetchLocationName();
+  }, [currentPosition?.lat, currentPosition?.lng]);
 
   const handleSelectDestination = (lat: number, lng: number, name: string) => {
     setDestinationName(name);
@@ -231,7 +289,7 @@ export const HomeScreen = ({
                   <p className="text-sm text-foreground">Getting location...</p>
                 ) : currentPosition ? (
                   <p className="text-sm text-foreground font-medium truncate">
-                    {currentPosition.lat.toFixed(4)}, {currentPosition.lng.toFixed(4)}
+                    {isLoadingLocationName ? 'Loading...' : currentLocationName || 'Fetching location name...'}
                   </p>
                 ) : (
                   <p className="text-sm text-muted-foreground">Unavailable</p>
