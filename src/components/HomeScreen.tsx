@@ -264,6 +264,7 @@ export const HomeScreen = ({
                   onSelectLocation={handleSelectDestination}
                   value={destinationName}
                   onChange={handleDestinationInputChange}
+                  currentPosition={currentPosition}
                 />
                 {destination && (
                   <Button

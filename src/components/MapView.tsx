@@ -71,6 +71,7 @@ export const MapView = ({
                 placeholder="Search destination..."
                 onSelectLocation={onSearchSelect}
                 value={destination?.name || ''}
+                currentPosition={currentPosition}
               />
             </div>
           </div>
