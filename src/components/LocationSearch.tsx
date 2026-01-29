@@ -96,39 +96,90 @@ export const LocationSearch = ({
 
     setIsLoading(true);
     try {
-      // Enhanced Nominatim search with viewbox bias if we have current position
-      const params = new URLSearchParams({
+      // Use multiple search strategies for better results
+      const searches: Promise<SearchResult[]>[] = [];
+
+      // 1. Photon API (OSM-based with better autocomplete)
+      const photonParams = new URLSearchParams({
+        q: searchQuery,
+        limit: '15',
+        lang: 'en',
+      });
+      
+      // Bias towards current location if available
+      if (currentPosition) {
+        photonParams.set('lat', currentPosition.lat.toString());
+        photonParams.set('lon', currentPosition.lng.toString());
+      }
+
+      const photonSearch = fetch(
+        `https://photon.komoot.io/api/?${photonParams.toString()}`
+      )
+        .then(res => res.json())
+        .then(data => {
+          // Convert Photon format to our format
+          return (data.features || []).map((feature: any) => ({
+            place_id: feature.properties.osm_id || Math.random(),
+            display_name: formatPhotonResult(feature.properties),
+            lat: feature.geometry.coordinates[1].toString(),
+            lon: feature.geometry.coordinates[0].toString(),
+            type: feature.properties.type || feature.properties.osm_value,
+            class: feature.properties.osm_key,
+            address: {
+              city: feature.properties.city,
+              town: feature.properties.town,
+              village: feature.properties.village,
+              state: feature.properties.state,
+              country: feature.properties.country,
+              road: feature.properties.street,
+              suburb: feature.properties.suburb || feature.properties.district,
+            },
+          }));
+        })
+        .catch(() => []);
+
+      searches.push(photonSearch);
+
+      // 2. Nominatim search as backup with wildcards
+      const nominatimParams = new URLSearchParams({
         format: 'json',
         q: searchQuery,
-        limit: '12',
+        limit: '10',
         addressdetails: '1',
-        extratags: '1',
-        namedetails: '1',
         'accept-language': 'en',
         dedupe: '1',
       });
 
-      // Bias results towards current location if available
       if (currentPosition) {
-        const delta = 2; // ~200km radius bias
-        params.set('viewbox', `${currentPosition.lng - delta},${currentPosition.lat + delta},${currentPosition.lng + delta},${currentPosition.lat - delta}`);
-        params.set('bounded', '0'); // Don't strictly limit, just prefer
+        const delta = 5; // Larger area for more results
+        nominatimParams.set('viewbox', `${currentPosition.lng - delta},${currentPosition.lat + delta},${currentPosition.lng + delta},${currentPosition.lat - delta}`);
+        nominatimParams.set('bounded', '0');
       }
 
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?${params.toString()}`,
+      const nominatimSearch = fetch(
+        `https://nominatim.openstreetmap.org/search?${nominatimParams.toString()}`,
         {
           headers: {
             'Accept': 'application/json',
             'User-Agent': 'GPSTravelAlarm/1.0',
           },
         }
-      );
-      const data = await response.json();
-      
+      )
+        .then(res => res.json())
+        .catch(() => []);
+
+      searches.push(nominatimSearch);
+
+      // Wait for all searches
+      const [photonResults, nominatimResults] = await Promise.all(searches);
+
+      // Merge and deduplicate results
+      const allResults = [...photonResults, ...nominatimResults];
+      const uniqueResults = deduplicateResults(allResults);
+
       // Sort by distance if we have current position
-      if (currentPosition && data.length > 0) {
-        data.sort((a: SearchResult, b: SearchResult) => {
+      if (currentPosition && uniqueResults.length > 0) {
+        uniqueResults.sort((a, b) => {
           const distA = calculateDistance(
             currentPosition.lat, currentPosition.lng,
             parseFloat(a.lat), parseFloat(a.lon)
@@ -140,8 +191,8 @@ export const LocationSearch = ({
           return distA - distB;
         });
       }
-      
-      setResults(data);
+
+      setResults(uniqueResults.slice(0, 15)); // Limit to 15 results
       setShowResults(true);
     } catch (error) {
       console.error('Search error:', error);
@@ -150,6 +201,33 @@ export const LocationSearch = ({
       setIsLoading(false);
     }
   }, [currentPosition]);
+
+  // Format Photon result into readable display name
+  const formatPhotonResult = (props: any): string => {
+    const parts: string[] = [];
+    
+    if (props.name) parts.push(props.name);
+    if (props.street) parts.push(props.street);
+    if (props.suburb || props.district) parts.push(props.suburb || props.district);
+    if (props.city || props.town || props.village) {
+      parts.push(props.city || props.town || props.village);
+    }
+    if (props.state) parts.push(props.state);
+    if (props.country) parts.push(props.country);
+    
+    return parts.join(', ') || 'Unknown location';
+  };
+
+  // Remove duplicate results based on coordinates
+  const deduplicateResults = (results: SearchResult[]): SearchResult[] => {
+    const seen = new Set<string>();
+    return results.filter(result => {
+      const key = `${parseFloat(result.lat).toFixed(4)},${parseFloat(result.lon).toFixed(4)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newQuery = e.target.value;
