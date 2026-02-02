@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { Locate } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 // Fix for default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -273,11 +275,32 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
     }
   }, [destination, alertRadius, isAlarmActive, currentPosition, showRoute]);
 
+  const handleLocateMe = () => {
+    if (mapRef.current && currentPosition) {
+      mapRef.current.setView([currentPosition.lat, currentPosition.lng], 16, {
+        animate: true,
+        duration: 0.5,
+      });
+    }
+  };
+
   return (
-    <div 
-      ref={mapContainerRef} 
-      className="h-full w-full"
-      style={{ background: themeConfig.background }}
-    />
+    <div className="relative h-full w-full">
+      <div 
+        ref={mapContainerRef} 
+        className="h-full w-full"
+        style={{ background: themeConfig.background }}
+      />
+      {currentPosition && (
+        <Button
+          onClick={handleLocateMe}
+          size="icon"
+          variant="secondary"
+          className="absolute bottom-4 right-4 z-[1000] h-10 w-10 rounded-full shadow-lg bg-background/90 backdrop-blur-sm hover:bg-background"
+        >
+          <Locate className="h-5 w-5" />
+        </Button>
+      )}
+    </div>
   );
 };
