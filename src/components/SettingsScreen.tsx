@@ -1,9 +1,11 @@
-import { ArrowLeft, Sun, Moon, Monitor, Bell, Vibrate, Volume2, VolumeX, Play } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, Sun, Moon, Monitor, Bell, Vibrate, Volume2, VolumeX, Play, Battery, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { useTheme } from '@/hooks/useTheme';
 import { AlarmSettings, AlarmTone } from '@/hooks/useAlarm';
+import { BatteryOptimizationGuide } from '@/components/BatteryOptimizationGuide';
 
 interface SettingsScreenProps {
   alarmSettings: AlarmSettings;
@@ -26,6 +28,12 @@ export const SettingsScreen = ({
   onBack,
 }: SettingsScreenProps) => {
   const { theme, setTheme } = useTheme();
+  const [showBatteryGuide, setShowBatteryGuide] = useState(false);
+
+  // Show battery optimization guide
+  if (showBatteryGuide) {
+    return <BatteryOptimizationGuide onDismiss={() => setShowBatteryGuide(false)} />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -201,6 +209,45 @@ export const SettingsScreen = ({
           <Play className="w-4 h-4 mr-2" />
           Test Alarm
         </Button>
+
+        {/* Battery Optimization Guide */}
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+            Background Operation
+          </h2>
+          <div className="glass-panel rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-warning/20 flex-shrink-0">
+                <Battery className="w-5 h-5 text-warning" />
+              </div>
+              <div className="flex-1">
+                <p className="text-foreground font-medium">Battery Optimization</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  To ensure the alarm works when your screen is off, you may need to disable battery optimization for this app.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-3"
+                  onClick={() => setShowBatteryGuide(true)}
+                >
+                  <HelpCircle className="w-4 h-4 mr-2" />
+                  View Setup Guide
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* App Info */}
+        <section className="text-center pt-4 pb-8">
+          <p className="text-xs text-muted-foreground">
+            Travel Alarm v1.0
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Never miss your stop again
+          </p>
+        </section>
       </div>
     </div>
   );

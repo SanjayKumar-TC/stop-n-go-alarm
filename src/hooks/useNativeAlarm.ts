@@ -97,48 +97,88 @@ export const useNativeAlarm = (initialSettings?: Partial<AlarmSettings>) => {
   }, [state.settings.tone]);
 
   // Trigger native alarm notification (works even when app is in background)
+  // AGGRESSIVE MODE: Multiple notifications, loud sounds, persistent vibration
   const triggerNativeAlarm = useCallback(async (destinationName: string) => {
     const { settings } = state;
     
     try {
-      // Schedule an immediate high-priority notification
-      await LocalNotifications.schedule({
-        notifications: [
-          {
-            id: notificationIdRef.current++,
-            title: '🔔 ARRIVING SOON!',
-            body: `You are approaching ${destinationName}. Time to wake up!`,
-            sound: settings.sound ? 'beep.wav' : undefined,
-            ongoing: true, // Makes it persistent on Android
-            autoCancel: false,
-            extra: {
-              type: 'arrival_alarm',
-            },
-            // High priority for immediate display
-            schedule: { at: new Date() },
+      // Schedule MULTIPLE immediate high-priority notifications for maximum wakeup effect
+      const urgentNotifications = [
+        {
+          id: notificationIdRef.current++,
+          title: '🚨 WAKE UP NOW! 🚨',
+          body: `ARRIVING AT ${destinationName.toUpperCase()}! GET READY TO EXIT!`,
+          sound: settings.sound ? 'beep.wav' : undefined,
+          ongoing: true, // Makes it persistent on Android - cannot be swiped away
+          autoCancel: false,
+          smallIcon: 'ic_stat_alarm',
+          largeIcon: 'ic_launcher',
+          extra: {
+            type: 'arrival_alarm',
+            priority: 'max',
           },
-        ],
-      });
+          schedule: { at: new Date() },
+        },
+        {
+          id: notificationIdRef.current++,
+          title: '⏰ DESTINATION REACHED!',
+          body: `You are at ${destinationName}. Time to get off!`,
+          sound: settings.sound ? 'beep.wav' : undefined,
+          schedule: { at: new Date(Date.now() + 500) },
+        },
+      ];
 
-      // Continuous notifications for alarm effect
+      await LocalNotifications.schedule({ notifications: urgentNotifications });
+
+      // AGGRESSIVE: Immediate strong vibration burst
+      if (settings.vibrate && navigator.vibrate) {
+        navigator.vibrate([1000, 200, 1000, 200, 1000, 200, 1000]);
+      }
+
+      // Continuous AGGRESSIVE notifications every 2 seconds (more frequent)
+      let notificationCount = 0;
       intervalRef.current = setInterval(async () => {
+        notificationCount++;
+        
+        // Alternate between different alarm messages for attention
+        const alarmMessages = [
+          { title: '🔔 WAKE UP! WAKE UP!', body: `GET OFF AT ${destinationName.toUpperCase()}!` },
+          { title: '⚠️ ARRIVING NOW!', body: `Don't miss your stop at ${destinationName}!` },
+          { title: '🚨 DESTINATION ALERT!', body: `${destinationName} - EXIT NOW!` },
+          { title: '⏰ TIME TO GO!', body: `Your stop ${destinationName} is here!` },
+        ];
+        
+        const message = alarmMessages[notificationCount % alarmMessages.length];
+
         await LocalNotifications.schedule({
           notifications: [
             {
               id: notificationIdRef.current++,
-              title: '⏰ WAKE UP!',
-              body: `Approaching ${destinationName}!`,
+              title: message.title,
+              body: message.body,
               sound: settings.sound ? 'beep.wav' : undefined,
               schedule: { at: new Date() },
             },
           ],
         });
 
-        // Vibration pattern
+        // AGGRESSIVE vibration pattern - longer and more intense
         if (settings.vibrate && navigator.vibrate) {
-          navigator.vibrate([500, 200, 500, 200, 500]);
+          navigator.vibrate([800, 150, 800, 150, 800, 150, 800, 150, 800]);
         }
-      }, 3000);
+      }, 2000); // Every 2 seconds instead of 3
+      
+      // Also set up a secondary vibration interval for maximum effect
+      const vibrationInterval = setInterval(() => {
+        if (settings.vibrate && navigator.vibrate) {
+          navigator.vibrate([500, 100, 500, 100, 500]);
+        }
+      }, 1000);
+      
+      
+      // Store the vibration interval to clear later
+      (intervalRef as any).vibrationInterval = vibrationInterval;
+      
     } catch (error) {
       console.error('Failed to trigger native alarm:', error);
     }
@@ -199,9 +239,16 @@ export const useNativeAlarm = (initialSettings?: Partial<AlarmSettings>) => {
   }, [state.isRinging, state.settings, isNative, createWebAudioAlarm, triggerNativeAlarm]);
 
   const stopAlarm = useCallback(async () => {
+    // Clear main interval
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
+    }
+    
+    // Clear secondary vibration interval if exists
+    if ((intervalRef as any).vibrationInterval) {
+      clearInterval((intervalRef as any).vibrationInterval);
+      (intervalRef as any).vibrationInterval = null;
     }
 
     if (oscillatorRef.current) {
@@ -215,17 +262,27 @@ export const useNativeAlarm = (initialSettings?: Partial<AlarmSettings>) => {
       gainNodeRef.current = null;
     }
 
+    // Stop all vibration immediately
     if (navigator.vibrate) {
       navigator.vibrate(0);
     }
 
-    // Cancel all pending notifications on native
+    // Cancel ALL notifications on native (both pending and delivered)
     if (isNative) {
       try {
+        // Cancel pending notifications
         const pending = await LocalNotifications.getPending();
         if (pending.notifications.length > 0) {
           await LocalNotifications.cancel({
             notifications: pending.notifications,
+          });
+        }
+        
+        // Also try to remove delivered notifications
+        const delivered = await LocalNotifications.getDeliveredNotifications();
+        if (delivered.notifications.length > 0) {
+          await LocalNotifications.removeDeliveredNotifications({
+            notifications: delivered.notifications,
           });
         }
       } catch (error) {
