@@ -8,6 +8,7 @@ import { useNativeAlarm, AlarmSettings } from '@/hooks/useNativeAlarm';
 import { useFavorites, FavoriteDestination } from '@/hooks/useFavorites';
 import { useTripHistory } from '@/hooks/useTripHistory';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useWakeLock } from '@/hooks/useWakeLock';
 import { useToast } from '@/hooks/use-toast';
 
 interface Destination {
@@ -59,6 +60,10 @@ const Index = () => {
     showArrivalConfirmation,
     showTrackingStarted,
   } = usePushNotifications();
+  const {
+    requestWakeLock,
+    releaseWakeLock,
+  } = useWakeLock();
 
   const currentPosition = position;
 
@@ -128,6 +133,9 @@ const Index = () => {
       await requestNotificationPermission();
     }
 
+    // Request wake lock to prevent device from sleeping
+    await requestWakeLock();
+
     const destinationName = destination.name || `${destination.lat.toFixed(4)}, ${destination.lng.toFixed(4)}`;
 
     // Start trip tracking
@@ -163,7 +171,7 @@ const Index = () => {
       title: "Alarm Activated",
       description: `You'll be alerted when within ${alertRadius < 1000 ? alertRadius + 'm' : (alertRadius / 1000).toFixed(1) + 'km'} of your destination`,
     });
-  }, [destination, currentPosition, alertRadius, activateAlarm, startWatching, startBackgroundTracking, isNative, startTrip, notificationPermission, requestNotificationPermission, showTrackingStarted, triggerAlarm, isAlarmRinging, toast]);
+  }, [destination, currentPosition, alertRadius, activateAlarm, startWatching, startBackgroundTracking, isNative, startTrip, notificationPermission, requestNotificationPermission, showTrackingStarted, triggerAlarm, isAlarmRinging, toast, requestWakeLock]);
 
   const handleDeactivateAlarm = useCallback(() => {
     deactivateAlarm();
@@ -172,6 +180,9 @@ const Index = () => {
     } else {
       stopWatching();
     }
+    
+    // Release wake lock when stopping
+    releaseWakeLock();
     
     // End trip as incomplete
     if (currentTripIdRef.current) {
@@ -183,7 +194,7 @@ const Index = () => {
       title: "Alarm Deactivated",
       description: "Location tracking stopped",
     });
-  }, [deactivateAlarm, stopWatching, stopBackgroundTracking, isNative, endTrip, toast]);
+  }, [deactivateAlarm, stopWatching, stopBackgroundTracking, isNative, endTrip, toast, releaseWakeLock]);
 
   const handleStopAlarm = useCallback(() => {
     const destinationName = destination?.name || 'your destination';
@@ -195,6 +206,9 @@ const Index = () => {
     } else {
       stopWatching();
     }
+    
+    // Release wake lock when alarm is dismissed
+    releaseWakeLock();
     
     // End trip as completed
     if (currentTripIdRef.current) {
@@ -211,7 +225,7 @@ const Index = () => {
       title: "👋 Hope you didn't miss your stop!",
       description: "Have a great day ahead!",
     });
-  }, [stopAlarm, deactivateAlarm, stopWatching, stopBackgroundTracking, isNative, endTrip, destination, showArrivalConfirmation, toast]);
+  }, [stopAlarm, deactivateAlarm, stopWatching, stopBackgroundTracking, isNative, endTrip, destination, showArrivalConfirmation, toast, releaseWakeLock]);
 
   const handleOpenSettings = useCallback(() => {
     setViewMode('settings');
