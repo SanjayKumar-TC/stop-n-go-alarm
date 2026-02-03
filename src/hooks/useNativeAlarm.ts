@@ -32,6 +32,9 @@ const TONE_FREQUENCIES: Record<AlarmTone, { freq: number; pattern: number[] }> =
   gentle: { freq: 440, pattern: [600, 400] },
 };
 
+// Alarm channel ID for high-priority notifications
+const ALARM_CHANNEL_ID = 'travel_alarm_channel';
+
 export const useNativeAlarm = (initialSettings?: Partial<AlarmSettings>) => {
   const [state, setState] = useState<AlarmState>({
     isActive: false,
@@ -44,6 +47,7 @@ export const useNativeAlarm = (initialSettings?: Partial<AlarmSettings>) => {
   const gainNodeRef = useRef<GainNode | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const notificationIdRef = useRef<number>(1);
+  const channelCreatedRef = useRef<boolean>(false);
   
   const isNative = Capacitor.isNativePlatform();
 
@@ -54,6 +58,29 @@ export const useNativeAlarm = (initialSettings?: Partial<AlarmSettings>) => {
     }));
   }, []);
 
+  // Create notification channel for Android (required for sound on Android 8+)
+  const createAlarmChannel = useCallback(async () => {
+    if (!isNative || channelCreatedRef.current) return;
+    
+    try {
+      await LocalNotifications.createChannel({
+        id: ALARM_CHANNEL_ID,
+        name: 'Travel Alarm',
+        description: 'Alarm notifications when approaching destination',
+        importance: 5, // IMPORTANCE_HIGH - makes sound and shows heads-up
+        visibility: 1, // PUBLIC
+        sound: 'beep', // References beep.wav in android/app/src/main/res/raw/
+        vibration: true,
+        lights: true,
+        lightColor: '#FF0000',
+      });
+      channelCreatedRef.current = true;
+      console.log('Alarm channel created successfully');
+    } catch (error) {
+      console.error('Failed to create alarm channel:', error);
+    }
+  }, [isNative]);
+
   // Request notification permissions on native
   const requestNotificationPermission = useCallback(async () => {
     if (isNative) {
@@ -61,8 +88,10 @@ export const useNativeAlarm = (initialSettings?: Partial<AlarmSettings>) => {
       if (permission.display !== 'granted') {
         await LocalNotifications.requestPermissions();
       }
+      // Create the high-priority channel
+      await createAlarmChannel();
     }
-  }, [isNative]);
+  }, [isNative, createAlarmChannel]);
 
   // Create web audio alarm (fallback for web)
   const createWebAudioAlarm = useCallback(() => {
@@ -101,6 +130,9 @@ export const useNativeAlarm = (initialSettings?: Partial<AlarmSettings>) => {
   const triggerNativeAlarm = useCallback(async (destinationName: string) => {
     const { settings } = state;
     
+    // Ensure channel exists before triggering
+    await createAlarmChannel();
+    
     try {
       // Schedule MULTIPLE immediate high-priority notifications for maximum wakeup effect
       const urgentNotifications = [
@@ -108,7 +140,8 @@ export const useNativeAlarm = (initialSettings?: Partial<AlarmSettings>) => {
           id: notificationIdRef.current++,
           title: '🚨 WAKE UP NOW! 🚨',
           body: `ARRIVING AT ${destinationName.toUpperCase()}! GET READY TO EXIT!`,
-          sound: settings.sound ? 'beep.wav' : undefined,
+          channelId: ALARM_CHANNEL_ID, // Use alarm channel for sound
+          sound: settings.sound ? 'beep' : undefined, // No .wav extension for Android
           ongoing: true, // Makes it persistent on Android - cannot be swiped away
           autoCancel: false,
           smallIcon: 'ic_stat_alarm',
@@ -123,7 +156,8 @@ export const useNativeAlarm = (initialSettings?: Partial<AlarmSettings>) => {
           id: notificationIdRef.current++,
           title: '⏰ DESTINATION REACHED!',
           body: `You are at ${destinationName}. Time to get off!`,
-          sound: settings.sound ? 'beep.wav' : undefined,
+          channelId: ALARM_CHANNEL_ID,
+          sound: settings.sound ? 'beep' : undefined,
           schedule: { at: new Date(Date.now() + 500) },
         },
       ];
@@ -156,7 +190,8 @@ export const useNativeAlarm = (initialSettings?: Partial<AlarmSettings>) => {
               id: notificationIdRef.current++,
               title: message.title,
               body: message.body,
-              sound: settings.sound ? 'beep.wav' : undefined,
+              channelId: ALARM_CHANNEL_ID,
+              sound: settings.sound ? 'beep' : undefined,
               schedule: { at: new Date() },
             },
           ],
