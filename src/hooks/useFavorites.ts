@@ -11,20 +11,17 @@ export interface FavoriteDestination {
 
 const STORAGE_KEY = 'travel-alarm-favorites';
 
-export const useFavorites = () => {
-  const [favorites, setFavorites] = useState<FavoriteDestination[]>([]);
+const loadFromStorage = (): FavoriteDestination[] => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
 
-  // Load favorites from localStorage
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setFavorites(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.error('Failed to load favorites:', e);
-    }
-  }, []);
+export const useFavorites = () => {
+  const [favorites, setFavorites] = useState<FavoriteDestination[]>(() => loadFromStorage());
 
   // Save favorites to localStorage
   const saveFavorites = useCallback((newFavorites: FavoriteDestination[]) => {
