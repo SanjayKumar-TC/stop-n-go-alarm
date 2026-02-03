@@ -1,28 +1,28 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.4ab7b6df450d40ada7bb7f4ddfd86f49',
+  appId: 'com.stopngo.alarm',
   appName: 'Travel Alarm',
   webDir: 'dist',
-  server: {
-    url: 'https://4ab7b6df-450d-40ad-a7bb-7f4ddfd86f49.lovableproject.com?forceHideBadge=true',
-    cleartext: true,
-  },
+  bundledWebRuntime: false,
+
   plugins: {
     LocalNotifications: {
       smallIcon: 'ic_stat_icon_config_sample',
       iconColor: '#488AFF',
-      sound: 'beep.wav',
+      sound: 'beep',
     },
     BackgroundGeolocation: {
-      // Background location permissions
+      // background tracking enabled
     },
   },
-  ios: {
-    contentInset: 'automatic',
-  },
+
   android: {
     allowMixedContent: true,
+  },
+
+  ios: {
+    contentInset: 'automatic',
   },
 };
 
