@@ -18,19 +18,24 @@ allprojects {
     }
 }
 
-// Force Java 17 + Kotlin 17 for ALL modules (including node_modules plugins)
-subprojects {
-    afterEvaluate {
-        if (it.hasProperty("android")) {
-            android {
+/**
+ * 🔥 FORCE JVM 17 FOR ALL SUBPROJECTS (INCLUDING node_modules)
+ * This is REQUIRED for Capacitor plugins
+ */
+subprojects { subproject ->
+    subproject.afterEvaluate {
+        // Force Java 17
+        if (subproject.hasProperty("android")) {
+            subproject.android {
                 compileOptions {
                     sourceCompatibility JavaVersion.VERSION_17
                     targetCompatibility JavaVersion.VERSION_17
                 }
             }
         }
-        
-        tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+
+        // Force Kotlin JVM 17
+        subproject.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
             kotlinOptions {
                 jvmTarget = "17"
             }
