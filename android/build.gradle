@@ -34,9 +34,12 @@ subprojects { subproject ->
             }
         }
 
-        // Force Kotlin JVM 17 (only if Kotlin tasks exist)
-        subproject.tasks.withType(Class.forName("org.jetbrains.kotlin.gradle.tasks.KotlinCompile")).configureEach {
-            kotlinOptions {
+        // Force Kotlin JVM 17 without depending on Kotlin classes being present at configuration time
+        // (some projects may not apply Kotlin, and Class.forName can crash configuration)
+        subproject.tasks.matching { task ->
+            task.class?.name == "org.jetbrains.kotlin.gradle.tasks.KotlinCompile"
+        }.configureEach { task ->
+            task.kotlinOptions {
                 jvmTarget = "17"
             }
         }
