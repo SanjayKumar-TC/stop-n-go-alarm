@@ -6,6 +6,7 @@ buildscript {
     dependencies {
         classpath "com.android.tools.build:gradle:8.9.1"
         classpath "com.google.gms:google-services:4.4.4"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22"
     }
 }
 
@@ -19,8 +20,7 @@ allprojects {
 }
 
 /**
- * 🔥 FORCE JVM 17 FOR ALL SUBPROJECTS (INCLUDING node_modules)
- * This is REQUIRED for Capacitor plugins
+ * Force JVM 17 for all subprojects (including Capacitor plugins in node_modules)
  */
 subprojects { subproject ->
     subproject.afterEvaluate {
@@ -34,8 +34,8 @@ subprojects { subproject ->
             }
         }
 
-        // Force Kotlin JVM 17
-        subproject.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        // Force Kotlin JVM 17 (only if Kotlin tasks exist)
+        subproject.tasks.withType(Class.forName("org.jetbrains.kotlin.gradle.tasks.KotlinCompile")).configureEach {
             kotlinOptions {
                 jvmTarget = "17"
             }
