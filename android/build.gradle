@@ -1,7 +1,28 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:8.9.1"
+        classpath "com.google.gms:google-services:4.4.4"
+    }
+}
+
+apply from: "variables.gradle"
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+/**
+ * 🔥 FORCE JAVA + KOTLIN = 17 FOR ALL MODULES
+ */
 subprojects {
     afterEvaluate { project ->
-
-        // 🔹 Force Java = 17 for all Android modules
         if (project.hasProperty("android")) {
             project.android {
                 compileOptions {
@@ -10,14 +31,15 @@ subprojects {
                 }
             }
         }
+    }
 
-        // 🔹 Force Kotlin = 17 ONLY if Kotlin plugin is applied
-        if (project.plugins.hasPlugin("kotlin-android")) {
-            project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-                kotlinOptions {
-                    jvmTarget = "17"
-                }
-            }
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        kotlinOptions {
+            jvmTarget = "17"
         }
     }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
 }
