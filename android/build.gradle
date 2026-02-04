@@ -24,23 +24,13 @@ allprojects {
  */
 subprojects { subproject ->
     subproject.afterEvaluate {
-        // Force Java 17
+        // Force Java 17 - Kotlin will inherit from compileOptions
         if (subproject.hasProperty("android")) {
             subproject.android {
                 compileOptions {
                     sourceCompatibility JavaVersion.VERSION_17
                     targetCompatibility JavaVersion.VERSION_17
                 }
-            }
-        }
-
-        // Force Kotlin JVM 17 without depending on Kotlin classes being present at configuration time
-        // (some projects may not apply Kotlin, and Class.forName can crash configuration)
-        subproject.tasks.matching { task ->
-            task.class?.name == "org.jetbrains.kotlin.gradle.tasks.KotlinCompile"
-        }.configureEach { task ->
-            task.kotlinOptions {
-                jvmTarget = "17"
             }
         }
     }
