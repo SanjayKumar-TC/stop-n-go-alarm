@@ -52,6 +52,7 @@ export const MapView = ({
         alertRadius={alertRadius}
         onMapClick={onMapClick}
         isAlarmActive={isAlarmActive}
+        buttonOffsetBottom="bottom-44"
       />
 
       {/* Header with back button and search */}
