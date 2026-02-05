@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Locate } from 'lucide-react';
+import 'leaflet-rotate';
+import { Locate, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // Fix for default marker icons
@@ -133,7 +134,14 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
       center,
       zoom: 15,
       zoomControl: true,
-    });
+      rotate: true,
+      rotateControl: {
+        closeOnZeroBearing: false,
+      },
+      touchRotate: true,
+      shiftKeyRotate: true,
+      bearing: 0,
+    } as L.MapOptions & { rotate?: boolean; rotateControl?: any; touchRotate?: boolean; shiftKeyRotate?: boolean; bearing?: number });
 
     // Initial tile layer with retina support
     tileLayerRef.current = L.tileLayer(themeConfig.url, {
@@ -312,6 +320,12 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
     }
   };
 
+  const handleResetRotation = () => {
+    if (mapRef.current) {
+      (mapRef.current as any).setBearing(0);
+    }
+  };
+
   return (
     <div className="relative h-full w-full">
       <div 
@@ -319,16 +333,28 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
         className="h-full w-full"
         style={{ background: themeConfig.background }}
       />
-      {currentPosition && (
+      <div className="absolute bottom-4 right-4 z-[1000] flex flex-col gap-2">
         <Button
-          onClick={handleLocateMe}
+          onClick={handleResetRotation}
           size="icon"
           variant="secondary"
-          className="absolute bottom-4 right-4 z-[1000] h-10 w-10 rounded-full shadow-lg bg-background/90 backdrop-blur-sm hover:bg-background"
+          className="h-10 w-10 rounded-full shadow-lg bg-background/90 backdrop-blur-sm hover:bg-background"
+          title="Reset rotation"
         >
-          <Locate className="h-5 w-5" />
+          <RotateCcw className="h-5 w-5" />
         </Button>
-      )}
+        {currentPosition && (
+          <Button
+            onClick={handleLocateMe}
+            size="icon"
+            variant="secondary"
+            className="h-10 w-10 rounded-full shadow-lg bg-background/90 backdrop-blur-sm hover:bg-background"
+            title="My location"
+          >
+            <Locate className="h-5 w-5" />
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
