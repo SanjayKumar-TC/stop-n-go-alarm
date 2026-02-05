@@ -266,44 +266,20 @@ export const useNativeAlarm = () => {
   }, [stopAlarm]);
 
   const testAlarm = useCallback(async () => {
+    // If already ringing, stop it (toggle behavior for testing)
+    if (isRinging) {
+      stopAlarm();
+      return;
+    }
+
     if (isNative) {
       await testAlarmSound();
     } else {
-      // Web fallback test
-      if (settings.sound) {
-        if (!audioContextRef.current) {
-          audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-        }
-
-        const ctx = audioContextRef.current;
-        if (ctx.state === 'suspended') {
-          ctx.resume();
-        }
-
-        const toneConfig = TONE_FREQUENCIES[settings.tone];
-        const oscillator = ctx.createOscillator();
-        const gainNode = ctx.createGain();
-
-        oscillator.type = TONE_FREQUENCIES[settings.tone].waveType;
-        oscillator.frequency.value = toneConfig.freq;
-        gainNode.gain.value = settings.volume;
-
-        oscillator.connect(gainNode);
-        gainNode.connect(ctx.destination);
-
-        oscillator.start();
-        
-        setTimeout(() => {
-          gainNode.gain.setValueAtTime(0, ctx.currentTime);
-          oscillator.stop();
-        }, 500);
-      }
-
-      if (settings.vibrate && navigator.vibrate) {
-        navigator.vibrate(300);
-      }
+      // Web: trigger actual continuous alarm for testing
+      // This will ring until stopped, just like the real alarm
+      triggerAlarm('Test Destination');
     }
-  }, [isNative, settings]);
+  }, [isNative, isRinging, stopAlarm, triggerAlarm]);
 
   useEffect(() => {
     setupAndroidAlarm();
