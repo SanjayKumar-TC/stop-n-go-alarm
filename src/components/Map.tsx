@@ -377,6 +377,20 @@ export const Map = ({ currentPosition, heading, destination, alertRadius, onMapC
         
         // Check if effect was cleaned up while fetching
         if (!isActive || !mapRef.current) return;
+
+        // Helper to fade in a polyline
+        const fadeInPolyline = (polyline: L.Polyline, targetOpacity: number, duration: number = 300) => {
+          const element = (polyline as any)._path;
+          if (element) {
+            element.style.opacity = '0';
+            element.style.transition = `opacity ${duration}ms ease-in`;
+            // Trigger reflow to ensure transition works
+            element.offsetHeight;
+            setTimeout(() => {
+              element.style.opacity = String(targetOpacity);
+            }, 10);
+          }
+        };
         
         if (routePoints) {
           // Ensure route connects exactly to markers
@@ -411,6 +425,10 @@ export const Map = ({ currentPosition, heading, destination, alertRadius, onMapC
           // Store border for cleanup
           (routeLineRef.current as any)._border = routeBorder;
 
+          // Fade in both polylines
+          fadeInPolyline(routeBorder, 0.9);
+          fadeInPolyline(routeLineRef.current, 1);
+
           // Fit map to show the route with smooth animation
           const bounds = routeLineRef.current.getBounds();
           mapRef.current.fitBounds(bounds, { 
@@ -434,6 +452,9 @@ export const Map = ({ currentPosition, heading, destination, alertRadius, onMapC
               interactive: false,
             }
           ).addTo(mapRef.current);
+
+          // Fade in the fallback route
+          fadeInPolyline(routeLineRef.current, 0.8);
 
           const bounds = L.latLngBounds(
             [currentPosition.lat, currentPosition.lng],
