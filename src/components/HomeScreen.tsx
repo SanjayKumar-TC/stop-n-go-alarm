@@ -419,7 +419,7 @@ export const HomeScreen = ({
             )}
 
             <CollapsibleContent>
-              <div className={`transition-all duration-300 ${isMapExpanded ? 'h-64' : 'h-0'}`}>
+              <div className={`transition-all duration-300 ${isMapExpanded ? 'h-80' : 'h-0'}`}>
                 <Map
                   currentPosition={currentPosition}
                   destination={destination}
