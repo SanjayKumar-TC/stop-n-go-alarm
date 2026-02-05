@@ -349,6 +349,121 @@
     box-shadow: none !important;
   }
 
+  /* Brutalist Design */
+  .design-brutalist .glass-panel {
+    background: hsl(var(--background));
+    backdrop-filter: none;
+    box-shadow: 4px 4px 0 0 hsl(var(--foreground));
+    border-radius: 0;
+    border: 3px solid hsl(var(--foreground));
+  }
+  
+  .design-brutalist .design-card {
+    background: hsl(var(--card));
+    border: 3px solid hsl(var(--foreground));
+    border-radius: 0;
+    box-shadow: 4px 4px 0 0 hsl(var(--foreground));
+  }
+  
+  .design-brutalist .design-button {
+    border-radius: 0;
+    border: 2px solid hsl(var(--foreground));
+    box-shadow: 3px 3px 0 0 hsl(var(--foreground));
+  }
+  
+  .design-brutalist button,
+  .design-brutalist [role="button"] {
+    border-radius: 0 !important;
+  }
+  
+  .design-brutalist input,
+  .design-brutalist select,
+  .design-brutalist textarea {
+    border-radius: 0 !important;
+    border-width: 2px !important;
+  }
+
+  /* Neon Design */
+  .design-neon .glass-panel {
+    background: hsl(var(--background) / 0.9);
+    backdrop-filter: blur(12px);
+    box-shadow: 
+      0 0 10px hsl(var(--primary) / 0.5),
+      0 0 20px hsl(var(--primary) / 0.3),
+      0 0 40px hsl(var(--primary) / 0.1),
+      inset 0 0 20px hsl(var(--primary) / 0.05);
+    border-radius: 0.5rem;
+    border: 1px solid hsl(var(--primary) / 0.5);
+  }
+  
+  .design-neon .design-card {
+    background: hsl(var(--card) / 0.8);
+    border: 1px solid hsl(var(--primary) / 0.4);
+    border-radius: 0.5rem;
+    box-shadow: 
+      0 0 8px hsl(var(--primary) / 0.4),
+      0 0 16px hsl(var(--primary) / 0.2);
+  }
+  
+  .design-neon .design-button {
+    border-radius: 0.5rem;
+    box-shadow: 
+      0 0 10px hsl(var(--primary) / 0.6),
+      0 0 20px hsl(var(--primary) / 0.4);
+  }
+  
+  .design-neon button:hover,
+  .design-neon [role="button"]:hover {
+    box-shadow: 
+      0 0 15px hsl(var(--primary) / 0.8),
+      0 0 30px hsl(var(--primary) / 0.5) !important;
+  }
+
+  /* Retro Design */
+  .design-retro .glass-panel {
+    background: hsl(var(--card));
+    backdrop-filter: none;
+    box-shadow: 3px 3px 0 0 hsl(var(--foreground) / 0.8);
+    border-radius: 0;
+    border: 2px solid hsl(var(--foreground));
+  }
+  
+  .design-retro .design-card {
+    background: hsl(var(--card));
+    border: 2px solid hsl(var(--foreground));
+    border-radius: 0;
+    box-shadow: 2px 2px 0 0 hsl(var(--foreground) / 0.6);
+  }
+  
+  .design-retro .design-button {
+    border-radius: 0;
+    border: 2px solid hsl(var(--foreground));
+    box-shadow: 2px 2px 0 0 hsl(var(--foreground));
+    font-family: 'Courier New', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .design-retro button,
+  .design-retro [role="button"] {
+    border-radius: 0 !important;
+    font-family: 'Courier New', monospace !important;
+  }
+  
+  .design-retro input,
+  .design-retro select,
+  .design-retro textarea {
+    border-radius: 0 !important;
+    border-width: 2px !important;
+    font-family: 'Courier New', monospace !important;
+  }
+  
+  .design-retro button:active,
+  .design-retro [role="button"]:active {
+    box-shadow: none !important;
+    transform: translate(2px, 2px);
+  }
+
   /* ========================================
      BASE UTILITIES
      ======================================== */
