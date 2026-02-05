@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-rotate';
-import { Locate } from 'lucide-react';
+import { Locate, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // Fix for default marker icons
@@ -320,6 +320,12 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
     }
   };
 
+  const handleResetNorth = () => {
+    if (mapRef.current) {
+      (mapRef.current as any).setBearing(0);
+    }
+  };
+
   return (
     <div className="relative h-full w-full">
       <div 
@@ -327,17 +333,28 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
         className="h-full w-full"
         style={{ background: themeConfig.background }}
       />
-      {currentPosition && (
+      <div className="absolute bottom-4 right-4 z-[1000] flex flex-col gap-2">
         <Button
-          onClick={handleLocateMe}
+          onClick={handleResetNorth}
           size="icon"
           variant="secondary"
-          className="absolute bottom-4 right-4 z-[1000] h-10 w-10 rounded-full shadow-lg bg-background/90 backdrop-blur-sm hover:bg-background"
-          title="My location"
+          className="h-10 w-10 rounded-full shadow-lg bg-background/90 backdrop-blur-sm hover:bg-background"
+          title="Reset to North"
         >
-          <Locate className="h-5 w-5" />
+          <Compass className="h-5 w-5" />
         </Button>
-      )}
+        {currentPosition && (
+          <Button
+            onClick={handleLocateMe}
+            size="icon"
+            variant="secondary"
+            className="h-10 w-10 rounded-full shadow-lg bg-background/90 backdrop-blur-sm hover:bg-background"
+            title="My location"
+          >
+            <Locate className="h-5 w-5" />
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
