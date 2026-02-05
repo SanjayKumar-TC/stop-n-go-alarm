@@ -146,12 +146,13 @@ export const useNativeAlarm = () => {
 
     const destName = destination || 'your destination';
 
-    // Native: use local notifications for sound
+    // Native: use repeating local notifications for continuous alarm
     if (isNative && settings.sound) {
+      // Schedule initial notification
       await LocalNotifications.schedule({
         notifications: [
           {
-            id: Date.now(),
+            id: 1001,
             title: '🔔 Arriving Soon!',
             body: `You are near ${destName}`,
             channelId: 'alarm_channel',
@@ -162,21 +163,46 @@ export const useNativeAlarm = () => {
           },
         ],
       });
+
+      // Keep ringing by scheduling repeated notifications every 3 seconds
+      intervalRef.current = setInterval(async () => {
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              id: Date.now(),
+              title: '🔔 Wake Up!',
+              body: `Approaching ${destName}`,
+              channelId: 'alarm_channel',
+              sound: 'gentle_chime',
+              ongoing: true,
+              autoCancel: false,
+              schedule: { at: new Date() },
+            },
+          ],
+        });
+
+        // Continuous vibration pattern
+        if (settings.vibrate && navigator.vibrate) {
+          navigator.vibrate([500, 200, 500, 200, 500]);
+        }
+      }, 3000);
     }
 
-    // Web fallback: use Web Audio API
+    // Web fallback: use Web Audio API with continuous looping
     if (!isNative && settings.sound) {
       const { gainNode, ctx, toneConfig } = createAlarmSound();
 
       let soundOn = true;
+      const cycleDuration = toneConfig.pattern[0] + toneConfig.pattern[1];
+      
       intervalRef.current = setInterval(() => {
         if (gainNode && ctx) {
           const now = ctx.currentTime;
-          // Smooth fade for calmer sound
+          // Smooth fade for calmer but persistent sound
           if (soundOn) {
-            gainNode.gain.linearRampToValueAtTime(settings.volume, now + 0.1);
+            gainNode.gain.linearRampToValueAtTime(settings.volume, now + 0.15);
           } else {
-            gainNode.gain.linearRampToValueAtTime(0, now + 0.1);
+            gainNode.gain.linearRampToValueAtTime(0.1, now + 0.15); // Don't go fully silent
           }
           soundOn = !soundOn;
         }
@@ -184,12 +210,13 @@ export const useNativeAlarm = () => {
         if (settings.vibrate && navigator.vibrate && soundOn) {
           navigator.vibrate(toneConfig.pattern[0]);
         }
-      }, TONE_FREQUENCIES[settings.tone].pattern[0] + TONE_FREQUENCIES[settings.tone].pattern[1]);
+      }, cycleDuration);
     }
 
-    // Vibration
+    // Continuous vibration pattern that repeats
     if (settings.vibrate && navigator.vibrate) {
-      navigator.vibrate([1000, 300, 1000, 300, 1000]);
+      // Start immediate vibration, then interval will maintain it
+      navigator.vibrate([500, 200, 500, 200, 500, 200, 500]);
     }
   }, [isRinging, isNative, settings, createAlarmSound]);
 
