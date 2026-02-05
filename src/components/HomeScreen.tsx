@@ -481,9 +481,6 @@ export const HomeScreen = ({
                   <p className="text-sm font-medium text-foreground truncate">
                     {destination.name || 'Selected Location'}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {destination.lat.toFixed(4)}, {destination.lng.toFixed(4)}
-                  </p>
                 </div>
               </div>
 
