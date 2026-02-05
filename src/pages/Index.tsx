@@ -336,6 +336,7 @@ const Index = () => {
     return (
       <SettingsScreen
         alarmSettings={alarmSettings}
+        isAlarmRinging={isAlarmRinging}
         onUpdateSettings={handleUpdateAlarmSettings}
         onTestAlarm={testAlarm}
         onBack={() => setViewMode('home')}

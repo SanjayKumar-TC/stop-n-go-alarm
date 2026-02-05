@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Sun, Moon, Monitor, Bell, Vibrate, Volume2, VolumeX, Play, Battery, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Sun, Moon, Monitor, Bell, BellOff, Vibrate, Volume2, VolumeX, Play, Battery, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
@@ -9,6 +9,7 @@ import { BatteryOptimizationGuide } from '@/components/BatteryOptimizationGuide'
 
 interface SettingsScreenProps {
   alarmSettings: AlarmSettings;
+  isAlarmRinging?: boolean;
   onUpdateSettings: (settings: Partial<AlarmSettings>) => void;
   onTestAlarm: () => void;
   onBack: () => void;
@@ -23,6 +24,7 @@ const TONE_OPTIONS: { value: AlarmTone; label: string; description: string }[] =
 
 export const SettingsScreen = ({
   alarmSettings,
+  isAlarmRinging = false,
   onUpdateSettings,
   onTestAlarm,
   onBack,
@@ -202,12 +204,21 @@ export const SettingsScreen = ({
         {/* Test Alarm Button */}
         <Button
           onClick={onTestAlarm}
-          variant="outline"
+          variant={isAlarmRinging ? "destructive" : "outline"}
           className="w-full"
           disabled={!alarmSettings.sound && !alarmSettings.vibrate}
         >
-          <Play className="w-4 h-4 mr-2" />
-          Test Alarm
+          {isAlarmRinging ? (
+            <>
+              <BellOff className="w-4 h-4 mr-2" />
+              Stop Alarm
+            </>
+          ) : (
+            <>
+              <Play className="w-4 h-4 mr-2" />
+              Test Alarm (Continuous)
+            </>
+          )}
         </Button>
 
         {/* Battery Optimization Guide */}
