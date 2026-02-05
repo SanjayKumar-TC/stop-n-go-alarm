@@ -324,21 +324,32 @@ export const Map = ({ currentPosition, heading, destination, alertRadius, onMapC
     // Track if this effect is still valid (not cleaned up)
     let isActive = true;
 
-    // Remove existing destination elements
+    // Fade out and remove existing destination elements
+    const fadeOutAndRemove = (layer: L.Layer, duration: number = 300) => {
+      const element = (layer as any)._path || (layer as any)._icon;
+      if (element) {
+        element.style.transition = `opacity ${duration}ms ease-out`;
+        element.style.opacity = '0';
+        setTimeout(() => layer.remove(), duration);
+      } else {
+        layer.remove();
+      }
+    };
+
     if (destinationMarkerRef.current) {
-      destinationMarkerRef.current.remove();
+      fadeOutAndRemove(destinationMarkerRef.current);
       destinationMarkerRef.current = null;
     }
     if (circleRef.current) {
-      circleRef.current.remove();
+      fadeOutAndRemove(circleRef.current);
       circleRef.current = null;
     }
     if (routeLineRef.current) {
-      // Also remove the border if it exists
+      // Also fade out the border if it exists
       if ((routeLineRef.current as any)._border) {
-        (routeLineRef.current as any)._border.remove();
+        fadeOutAndRemove((routeLineRef.current as any)._border);
       }
-      routeLineRef.current.remove();
+      fadeOutAndRemove(routeLineRef.current);
       routeLineRef.current = null;
     }
 
