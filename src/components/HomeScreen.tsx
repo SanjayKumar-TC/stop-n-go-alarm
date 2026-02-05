@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Navigation, Clock, Bell, BellOff, Settings, Maximize2, Minimize2, AlertTriangle, X, Map as MapIcon, Footprints, Bike, Train, Bus, Car, Sun, Moon, Globe, Layers } from 'lucide-react';
+import { MapPin, Navigation, Clock, Bell, BellOff, Settings, Maximize2, Minimize2, AlertTriangle, X, Map as MapIcon, Footprints, Bike, Train, Bus, Car, Sun, Moon, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { LocationSearch } from '@/components/LocationSearch';
@@ -39,7 +39,6 @@ interface MapThemeOption {
 const MAP_THEME_OPTIONS: MapThemeOption[] = [
   { id: 'dark', label: 'Dark', icon: <Moon className="w-4 h-4" /> },
   { id: 'light', label: 'Light', icon: <Sun className="w-4 h-4" /> },
-  { id: 'satellite', label: 'Satellite', icon: <Globe className="w-4 h-4" /> },
   { id: 'traffic', label: 'Traffic', icon: <Layers className="w-4 h-4" /> },
 ];
 
