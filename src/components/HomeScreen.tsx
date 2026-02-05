@@ -11,6 +11,11 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { FavoriteDestination } from '@/hooks/useFavorites';
 import { Trip } from '@/hooks/useTripHistory';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export type TransportMode = 'walk' | 'cycle' | 'bike' | 'bus' | 'metro' | 'car';
 
@@ -384,15 +389,53 @@ export const HomeScreen = ({
                   </Button>
                 )}
               </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={onOpenMapForDestination}
-                className="flex-shrink-0 h-10 w-10"
-                title="Choose on map"
-              >
-                <MapIcon className="w-4 h-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="flex-shrink-0 h-10 w-10"
+                    title="Map options"
+                  >
+                    <MapIcon className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent 
+                  align="end" 
+                  className="bg-background border border-border shadow-lg p-2 min-w-[140px]"
+                >
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onOpenMapForDestination}
+                    className="w-full justify-start gap-2 mb-2"
+                  >
+                    <Maximize2 className="w-4 h-4" />
+                    <span>Open Full Map</span>
+                  </Button>
+                  <div className="border-t border-border pt-2">
+                    <p className="text-xs text-muted-foreground px-2 mb-2">Map Theme</p>
+                    <ToggleGroup 
+                      type="single" 
+                      value={mapTheme} 
+                      onValueChange={(value) => value && setMapTheme(value as MapTheme)}
+                      className="flex flex-col gap-1"
+                    >
+                      {MAP_THEME_OPTIONS.map((option) => (
+                        <ToggleGroupItem 
+                          key={option.id} 
+                          value={option.id} 
+                          aria-label={option.label}
+                          className="h-9 w-full px-3 gap-2 justify-start data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                        >
+                          {option.icon}
+                          <span className="text-sm">{option.label}</span>
+                        </ToggleGroupItem>
+                      ))}
+                    </ToggleGroup>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         )}
