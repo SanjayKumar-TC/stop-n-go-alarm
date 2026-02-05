@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, MapPin, Clock, Navigation, Sun, Moon, Globe, Layers, Map as MapIcon } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Navigation, Sun, Moon, Globe, Layers, Map as MapIcon, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Map, MapTheme } from '@/components/Map';
 import { LocationSearch } from '@/components/LocationSearch';
@@ -138,26 +138,38 @@ export const MapView = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent 
             align="end" 
-            className="bg-background border border-border shadow-lg p-1 min-w-0"
+            className="bg-background border border-border shadow-lg p-2 min-w-[140px]"
           >
-            <ToggleGroup 
-              type="single" 
-              value={mapTheme} 
-              onValueChange={(value) => value && setMapTheme(value as MapTheme)}
-              className="flex flex-col gap-1"
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="w-full justify-start gap-2 mb-2"
             >
-              {MAP_THEME_OPTIONS.map((option) => (
-                <ToggleGroupItem 
-                  key={option.id} 
-                  value={option.id} 
-                  aria-label={option.label}
-                  className="h-9 w-full px-3 gap-2 justify-start data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-                >
-                  {option.icon}
-                  <span className="text-sm">{option.label}</span>
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
+              <Minimize2 className="w-4 h-4" />
+              <span>Minimize</span>
+            </Button>
+            <div className="border-t border-border pt-2">
+              <p className="text-xs text-muted-foreground px-2 mb-2">Map Theme</p>
+              <ToggleGroup 
+                type="single" 
+                value={mapTheme} 
+                onValueChange={(value) => value && setMapTheme(value as MapTheme)}
+                className="flex flex-col gap-1"
+              >
+                {MAP_THEME_OPTIONS.map((option) => (
+                  <ToggleGroupItem 
+                    key={option.id} 
+                    value={option.id} 
+                    aria-label={option.label}
+                    className="h-9 w-full px-3 gap-2 justify-start data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                  >
+                    {option.icon}
+                    <span className="text-sm">{option.label}</span>
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            </div>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
