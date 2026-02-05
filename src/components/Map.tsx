@@ -379,7 +379,7 @@ export const Map = ({ currentPosition, heading, destination, alertRadius, onMapC
         if (!isActive || !mapRef.current) return;
 
         // Helper to fade in a polyline
-        const fadeInPolyline = (polyline: L.Polyline, targetOpacity: number, duration: number = 150) => {
+        const fadeInPolyline = (polyline: L.Polyline, targetOpacity: number, duration: number = 100) => {
           const element = (polyline as any)._path;
           if (element) {
             element.style.opacity = '0';
