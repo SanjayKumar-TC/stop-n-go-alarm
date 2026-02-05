@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 
-export type AlarmTone = 'beep' | 'chime' | 'alert' | 'gentle';
+export type AlarmTone = 'gentle' | 'melody' | 'waves' | 'bells';
 
 export interface AlarmSettings {
   vibrate: boolean;
@@ -18,16 +18,16 @@ export interface AlarmState {
 const DEFAULT_SETTINGS: AlarmSettings = {
   vibrate: true,
   sound: true,
-  tone: 'beep',
+  tone: 'gentle',
   volume: 0.7,
 };
 
-// Frequency patterns for different tones
-const TONE_FREQUENCIES: Record<AlarmTone, { freq: number; pattern: number[] }> = {
-  beep: { freq: 880, pattern: [200, 100] },
-  chime: { freq: 659, pattern: [400, 200] },
-  alert: { freq: 1047, pattern: [100, 50] },
-  gentle: { freq: 440, pattern: [600, 400] },
+// Pleasant, smooth tone configurations using calming frequencies
+const TONE_FREQUENCIES: Record<AlarmTone, { freq: number; pattern: number[]; waveType: OscillatorType }> = {
+  gentle: { freq: 396, pattern: [800, 600], waveType: 'sine' },      // Solfeggio frequency - liberating
+  melody: { freq: 528, pattern: [600, 400], waveType: 'sine' },      // Solfeggio frequency - love/healing
+  waves: { freq: 432, pattern: [1000, 800], waveType: 'sine' },      // Natural frequency - calming
+  bells: { freq: 639, pattern: [500, 500], waveType: 'triangle' },   // Solfeggio frequency - connection
 };
 
 export const useAlarm = (initialSettings?: Partial<AlarmSettings>) => {
@@ -66,7 +66,7 @@ export const useAlarm = (initialSettings?: Partial<AlarmSettings>) => {
     const oscillator = ctx.createOscillator();
     const gainNode = ctx.createGain();
 
-    oscillator.type = state.settings.tone === 'gentle' ? 'sine' : 'square';
+    oscillator.type = TONE_FREQUENCIES[state.settings.tone].waveType;
     oscillator.frequency.value = toneConfig.freq;
     gainNode.gain.value = 0;
 
@@ -170,7 +170,7 @@ export const useAlarm = (initialSettings?: Partial<AlarmSettings>) => {
       const oscillator = ctx.createOscillator();
       const gainNode = ctx.createGain();
 
-      oscillator.type = settings.tone === 'gentle' ? 'sine' : 'square';
+      oscillator.type = TONE_FREQUENCIES[settings.tone].waveType;
       oscillator.frequency.value = toneConfig.freq;
       gainNode.gain.value = settings.volume;
 
