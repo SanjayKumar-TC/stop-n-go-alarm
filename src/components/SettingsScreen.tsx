@@ -139,35 +139,72 @@ export const SettingsScreen = ({
               </DropdownMenuTrigger>
               <DropdownMenuContent 
                 align="end" 
-                className="w-64 bg-background border border-border shadow-lg z-[100]"
+                className="w-80 bg-background border border-border shadow-lg z-[100] max-h-[70vh] overflow-y-auto"
               >
                 {UI_THEME_OPTIONS.map((themeOption) => (
                   <DropdownMenuItem
                     key={themeOption.id}
                     onClick={() => setUITheme(themeOption.id)}
-                    className={`flex items-center gap-3 p-3 cursor-pointer ${
+                    className={`flex flex-col gap-2 p-3 cursor-pointer ${
                       uiTheme === themeOption.id ? 'bg-primary/10' : ''
                     }`}
                   >
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <div 
-                        className="w-4 h-4 rounded-full border border-gray-300 shadow-sm"
-                        style={{ backgroundColor: themeOption.lightColor }}
-                        title="Light mode"
-                      />
-                      <div 
-                        className="w-4 h-4 rounded-full border border-gray-600 shadow-sm"
-                        style={{ backgroundColor: themeOption.darkColor }}
-                        title="Dark mode"
-                      />
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <div 
+                          className="w-4 h-4 rounded-full border border-border shadow-sm"
+                          style={{ backgroundColor: themeOption.lightColor }}
+                          title="Light mode"
+                        />
+                        <div 
+                          className="w-4 h-4 rounded-full border border-border shadow-sm"
+                          style={{ backgroundColor: themeOption.darkColor }}
+                          title="Dark mode"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-foreground text-sm font-medium">{themeOption.label}</p>
+                        <p className="text-xs text-muted-foreground">{themeOption.description}</p>
+                      </div>
+                      {uiTheme === themeOption.id && (
+                        <div className="w-2 h-2 rounded-full bg-primary" />
+                      )}
                     </div>
-                    <div className="flex-1">
-                      <p className="text-foreground text-sm">{themeOption.label}</p>
-                      <p className="text-xs text-muted-foreground">{themeOption.description}</p>
+                    {/* Live Preview Panel */}
+                    <div className="w-full rounded-lg border border-border bg-muted/30 p-2 mt-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {/* Primary Button Preview */}
+                        <div 
+                          className="px-3 py-1 rounded-md text-xs font-medium text-white"
+                          style={{ backgroundColor: themeOption.primaryColor }}
+                        >
+                          Button
+                        </div>
+                        {/* Outline Button Preview */}
+                        <div 
+                          className="px-3 py-1 rounded-md text-xs font-medium border-2 bg-transparent"
+                          style={{ borderColor: themeOption.primaryColor, color: themeOption.primaryColor }}
+                        >
+                          Outline
+                        </div>
+                        {/* Badge Preview */}
+                        <div 
+                          className="px-2 py-0.5 rounded-full text-[10px] font-medium text-white"
+                          style={{ backgroundColor: themeOption.primaryColor }}
+                        >
+                          Badge
+                        </div>
+                        {/* Switch/Toggle Preview */}
+                        <div className="flex items-center gap-1">
+                          <div 
+                            className="w-8 h-4 rounded-full flex items-center px-0.5"
+                            style={{ backgroundColor: themeOption.primaryColor }}
+                          >
+                            <div className="w-3 h-3 rounded-full bg-white ml-auto" />
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    {uiTheme === themeOption.id && (
-                      <div className="w-2 h-2 rounded-full bg-primary" />
-                    )}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
