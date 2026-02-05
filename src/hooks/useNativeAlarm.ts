@@ -32,11 +32,11 @@ const loadSettings = (): AlarmSettings => {
   return DEFAULT_SETTINGS;
 };
 
-// Pleasant, smooth tone configurations using calming frequencies
+// Pleasant, smooth tone configurations with longer sustained ringing
 const TONE_FREQUENCIES: Record<AlarmTone, { freq: number; pattern: number[]; waveType: OscillatorType }> = {
-  gentle: { freq: 396, pattern: [800, 600], waveType: 'sine' },
-  melody: { freq: 528, pattern: [600, 400], waveType: 'sine' },
-  waves: { freq: 432, pattern: [1000, 800], waveType: 'sine' },
+  gentle: { freq: 396, pattern: [2000, 800], waveType: 'sine' },
+  melody: { freq: 528, pattern: [2500, 600], waveType: 'sine' },
+  waves: { freq: 432, pattern: [3000, 1000], waveType: 'sine' },
 };
 
 /* ---------------------------------------------------
