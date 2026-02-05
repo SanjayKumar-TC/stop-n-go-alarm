@@ -321,6 +321,9 @@ export const Map = ({ currentPosition, heading, destination, alertRadius, onMapC
   useEffect(() => {
     if (!mapRef.current) return;
 
+    // Track if this effect is still valid (not cleaned up)
+    let isActive = true;
+
     // Remove existing destination elements
     if (destinationMarkerRef.current) {
       destinationMarkerRef.current.remove();
@@ -361,7 +364,10 @@ export const Map = ({ currentPosition, heading, destination, alertRadius, onMapC
       const drawRoute = async () => {
         const routePoints = await fetchRoute(currentPosition, destination);
         
-        if (routePoints && mapRef.current) {
+        // Check if effect was cleaned up while fetching
+        if (!isActive || !mapRef.current) return;
+        
+        if (routePoints) {
           // Ensure route connects exactly to markers
           const fullRoute: [number, number][] = [
             [currentPosition.lat, currentPosition.lng], // Start at current location
@@ -432,6 +438,11 @@ export const Map = ({ currentPosition, heading, destination, alertRadius, onMapC
 
       drawRoute();
     }
+
+    // Cleanup function to prevent stale route drawing
+    return () => {
+      isActive = false;
+    };
   }, [destination, alertRadius, isAlarmActive, currentPosition, showRoute]);
 
   const handleLocateMe = () => {
