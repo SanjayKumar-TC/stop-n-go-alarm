@@ -105,9 +105,10 @@ interface MapProps {
   isAlarmActive: boolean;
   showRoute?: boolean;
   theme?: MapTheme;
+  buttonOffsetBottom?: string;
 }
 
-export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isAlarmActive, showRoute = true, theme = 'dark' }: MapProps) => {
+export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isAlarmActive, showRoute = true, theme = 'dark', buttonOffsetBottom = 'bottom-4' }: MapProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const currentMarkerRef = useRef<L.Marker | null>(null);
@@ -333,7 +334,7 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
         className="h-full w-full"
         style={{ background: themeConfig.background }}
       />
-      <div className="absolute bottom-4 right-4 z-[1000] flex flex-col gap-2">
+      <div className={`absolute ${buttonOffsetBottom} right-4 z-[1000] flex flex-col gap-2`}>
         <Button
           onClick={handleResetNorth}
           size="icon"
