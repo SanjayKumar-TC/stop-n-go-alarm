@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
-export type AlarmTone = 'gentle' | 'melody' | 'waves' | 'bells';
+export type AlarmTone = 'gentle' | 'melody' | 'waves';
 
 export interface AlarmSettings {
   vibrate: boolean;
@@ -37,7 +37,6 @@ const TONE_FREQUENCIES: Record<AlarmTone, { freq: number; pattern: number[]; wav
   gentle: { freq: 396, pattern: [800, 600], waveType: 'sine' },
   melody: { freq: 528, pattern: [600, 400], waveType: 'sine' },
   waves: { freq: 432, pattern: [1000, 800], waveType: 'sine' },
-  bells: { freq: 639, pattern: [500, 500], waveType: 'triangle' },
 };
 
 /* ---------------------------------------------------
