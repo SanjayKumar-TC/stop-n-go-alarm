@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-rotate';
-import { Locate, RotateCcw, RotateCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Locate } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // Fix for default marker icons
@@ -320,26 +320,6 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
     }
   };
 
-  const handleResetRotation = () => {
-    if (mapRef.current) {
-      (mapRef.current as any).setBearing(0);
-    }
-  };
-
-  const handleRotateLeft = () => {
-    if (mapRef.current) {
-      const currentBearing = (mapRef.current as any).getBearing() || 0;
-      (mapRef.current as any).setBearing(currentBearing - 15);
-    }
-  };
-
-  const handleRotateRight = () => {
-    if (mapRef.current) {
-      const currentBearing = (mapRef.current as any).getBearing() || 0;
-      (mapRef.current as any).setBearing(currentBearing + 15);
-    }
-  };
-
   return (
     <div className="relative h-full w-full">
       <div 
@@ -347,37 +327,6 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
         className="h-full w-full"
         style={{ background: themeConfig.background }}
       />
-      {/* Rotation controls - top right */}
-      <div className="absolute top-4 right-4 z-[1000] flex items-center gap-1 bg-background/90 backdrop-blur-sm rounded-full shadow-lg p-1">
-        <Button
-          onClick={handleRotateLeft}
-          size="icon"
-          variant="ghost"
-          className="h-8 w-8 rounded-full hover:bg-muted"
-          title="Rotate left"
-        >
-          <RotateCcw className="h-4 w-4" />
-        </Button>
-        <Button
-          onClick={handleResetRotation}
-          size="sm"
-          variant="ghost"
-          className="h-8 px-2 rounded-full hover:bg-muted text-xs font-medium"
-          title="Reset to North"
-        >
-          N
-        </Button>
-        <Button
-          onClick={handleRotateRight}
-          size="icon"
-          variant="ghost"
-          className="h-8 w-8 rounded-full hover:bg-muted"
-          title="Rotate right"
-        >
-          <RotateCw className="h-4 w-4" />
-        </Button>
-      </div>
-      {/* Location button - bottom right */}
       {currentPosition && (
         <Button
           onClick={handleLocateMe}
