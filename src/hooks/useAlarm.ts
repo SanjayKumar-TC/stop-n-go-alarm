@@ -91,21 +91,22 @@ export const useAlarm = (initialSettings?: Partial<AlarmSettings>) => {
     if (settings.sound) {
       const { gainNode, ctx, toneConfig } = createAlarmSound();
 
-      // Create beeping pattern
-      let beepOn = true;
+      // Create smooth pulsing pattern
+      let soundOn = true;
       intervalRef.current = setInterval(() => {
         if (gainNode && ctx) {
           const now = ctx.currentTime;
-          if (beepOn) {
-            gainNode.gain.setValueAtTime(settings.volume, now);
+          // Smooth fade for calmer sound
+          if (soundOn) {
+            gainNode.gain.linearRampToValueAtTime(settings.volume, now + 0.15);
           } else {
-            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(0, now + 0.15);
           }
-          beepOn = !beepOn;
+          soundOn = !soundOn;
         }
         
         // Vibration
-        if (settings.vibrate && navigator.vibrate && beepOn) {
+        if (settings.vibrate && navigator.vibrate && soundOn) {
           navigator.vibrate(toneConfig.pattern[0]);
         }
       }, TONE_FREQUENCIES[settings.tone].pattern[0] + TONE_FREQUENCIES[settings.tone].pattern[1]);

@@ -51,7 +51,7 @@ export async function testAlarmSound() {
     name: 'Travel Alarm',
     description: 'Destination alarm',
     importance: 5,
-    sound: 'beep',
+    sound: 'gentle_chime',
     vibration: true,
   });
 
@@ -59,10 +59,10 @@ export async function testAlarmSound() {
     notifications: [
       {
         id: 1,
-        title: '🚨 TEST ALARM',
+        title: '🔔 TEST ALARM',
         body: 'If you hear sound, alarm works!',
         channelId: 'alarm_channel',
-        sound: 'beep',
+        sound: 'gentle_chime',
         schedule: { at: new Date(Date.now() + 1000) },
       },
     ],
@@ -96,7 +96,7 @@ export const useNativeAlarm = () => {
       id: 'alarm_channel',
       name: 'Travel Alarm',
       importance: 5,
-      sound: 'beep',
+      sound: 'gentle_chime',
       vibration: true,
     });
   }, [isNative]);
@@ -152,10 +152,10 @@ export const useNativeAlarm = () => {
         notifications: [
           {
             id: Date.now(),
-            title: '🚨 WAKE UP!',
+            title: '🔔 Arriving Soon!',
             body: `You are near ${destName}`,
             channelId: 'alarm_channel',
-            sound: 'beep',
+            sound: 'gentle_chime',
             ongoing: true,
             autoCancel: false,
             schedule: { at: new Date() },
@@ -168,19 +168,20 @@ export const useNativeAlarm = () => {
     if (!isNative && settings.sound) {
       const { gainNode, ctx, toneConfig } = createAlarmSound();
 
-      let beepOn = true;
+      let soundOn = true;
       intervalRef.current = setInterval(() => {
         if (gainNode && ctx) {
           const now = ctx.currentTime;
-          if (beepOn) {
-            gainNode.gain.setValueAtTime(settings.volume, now);
+          // Smooth fade for calmer sound
+          if (soundOn) {
+            gainNode.gain.linearRampToValueAtTime(settings.volume, now + 0.1);
           } else {
-            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(0, now + 0.1);
           }
-          beepOn = !beepOn;
+          soundOn = !soundOn;
         }
         
-        if (settings.vibrate && navigator.vibrate && beepOn) {
+        if (settings.vibrate && navigator.vibrate && soundOn) {
           navigator.vibrate(toneConfig.pattern[0]);
         }
       }, TONE_FREQUENCIES[settings.tone].pattern[0] + TONE_FREQUENCIES[settings.tone].pattern[1]);
