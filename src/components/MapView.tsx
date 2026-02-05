@@ -1,8 +1,23 @@
-import { ArrowLeft, MapPin, Clock, Navigation } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, MapPin, Clock, Navigation, Sun, Moon, Globe, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Map } from '@/components/Map';
+import { Map, MapTheme } from '@/components/Map';
 import { LocationSearch } from '@/components/LocationSearch';
 import { formatDistance, calculateDistance } from '@/hooks/useGeolocation';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+
+interface MapThemeOption {
+  id: MapTheme;
+  label: string;
+  icon: React.ReactNode;
+}
+
+const MAP_THEME_OPTIONS: MapThemeOption[] = [
+  { id: 'dark', label: 'Dark', icon: <Moon className="w-4 h-4" /> },
+  { id: 'light', label: 'Light', icon: <Sun className="w-4 h-4" /> },
+  { id: 'satellite', label: 'Satellite', icon: <Globe className="w-4 h-4" /> },
+  { id: 'traffic', label: 'Traffic', icon: <Layers className="w-4 h-4" /> },
+];
 
 interface MapViewProps {
   currentPosition: { lat: number; lng: number } | null;
@@ -39,6 +54,16 @@ export const MapView = ({
   onConfirm,
   onSearchSelect,
 }: MapViewProps) => {
+  const [mapTheme, setMapTheme] = useState<MapTheme>(() => {
+    const saved = localStorage.getItem('mapTheme');
+    return (saved as MapTheme) || 'dark';
+  });
+
+  // Persist map theme to localStorage
+  useEffect(() => {
+    localStorage.setItem('mapTheme', mapTheme);
+  }, [mapTheme]);
+
   const distance = currentPosition && destination
     ? calculateDistance(currentPosition.lat, currentPosition.lng, destination.lat, destination.lng)
     : null;
@@ -53,6 +78,7 @@ export const MapView = ({
         onMapClick={onMapClick}
         isAlarmActive={isAlarmActive}
         buttonOffsetBottom="bottom-44"
+        theme={mapTheme}
       />
 
       {/* Header with back button and search */}
@@ -92,6 +118,30 @@ export const MapView = ({
         </div>
       )}
 
+      {/* Map Theme Selector */}
+      <div className="absolute top-36 right-4 z-[1000]">
+        <div className="glass-panel rounded-lg p-1">
+          <ToggleGroup 
+            type="single" 
+            value={mapTheme} 
+            onValueChange={(value) => value && setMapTheme(value as MapTheme)}
+            className="flex flex-col gap-1"
+          >
+            {MAP_THEME_OPTIONS.map((option) => (
+              <ToggleGroupItem 
+                key={option.id} 
+                value={option.id} 
+                aria-label={option.label}
+                className="h-9 w-9 p-0 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                title={option.label}
+              >
+                {option.icon}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        </div>
+      </div>
+
       {/* Bottom Panel with Distance and Time */}
       {destination && (
         <div className="absolute bottom-0 left-0 right-0 z-[1000] p-4 pb-8 safe-area-bottom">
@@ -125,9 +175,6 @@ export const MapView = ({
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
                   {destination.name || 'Selected Location'}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {destination.lat.toFixed(4)}, {destination.lng.toFixed(4)}
                 </p>
               </div>
             </div>
