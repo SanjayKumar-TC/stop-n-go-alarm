@@ -15,10 +15,10 @@ interface SettingsScreenProps {
 }
 
 const TONE_OPTIONS: { value: AlarmTone; label: string; description: string }[] = [
-  { value: 'beep', label: 'Beep', description: 'Sharp, attention-grabbing beep' },
-  { value: 'chime', label: 'Chime', description: 'Pleasant chime sound' },
-  { value: 'alert', label: 'Alert', description: 'Rapid alert tone' },
-  { value: 'gentle', label: 'Gentle', description: 'Soft, gradual wake-up' },
+  { value: 'gentle', label: 'Gentle', description: 'Soft, calming wake-up tone' },
+  { value: 'melody', label: 'Melody', description: 'Soothing harmonic sound' },
+  { value: 'waves', label: 'Waves', description: 'Relaxing, flowing rhythm' },
+  { value: 'bells', label: 'Bells', description: 'Peaceful bell harmonics' },
 ];
 
 export const SettingsScreen = ({
