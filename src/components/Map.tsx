@@ -12,7 +12,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
-export type MapTheme = 'dark' | 'light' | 'satellite' | 'traffic';
+export type MapTheme = 'dark' | 'light' | 'satellite';
 
 interface MapThemeConfig {
   url: string;
@@ -40,12 +40,6 @@ const MAP_THEMES: Record<MapTheme, MapThemeConfig & { labelsUrl?: string }> = {
     labelsUrl: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
     attribution: '&copy; Esri, Maxar, Earthstar Geographics',
     background: 'hsl(220, 25%, 15%)',
-  },
-  traffic: {
-    // CartoDB Voyager Labels Under - clear roads with prominent labels
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    background: 'hsl(0, 0%, 95%)',
   },
 };
 

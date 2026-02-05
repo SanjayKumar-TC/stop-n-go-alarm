@@ -40,7 +40,6 @@ const MAP_THEME_OPTIONS: MapThemeOption[] = [
   { id: 'dark', label: 'Dark', icon: <Moon className="w-4 h-4" /> },
   { id: 'light', label: 'Light', icon: <Sun className="w-4 h-4" /> },
   { id: 'satellite', label: 'Satellite', icon: <Globe className="w-4 h-4" /> },
-  { id: 'traffic', label: 'Traffic', icon: <Layers className="w-4 h-4" /> },
 ];
 
 interface HomeScreenProps {
