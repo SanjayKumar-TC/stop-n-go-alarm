@@ -7,15 +7,17 @@ export interface UIThemeOption {
   label: string;
   description: string;
   primaryColor: string; // For preview swatch
+  lightColor: string; // Light mode preview
+  darkColor: string; // Dark mode preview
 }
 
 export const UI_THEME_OPTIONS: UIThemeOption[] = [
-  { id: 'teal', label: 'Teal', description: 'Default calming teal', primaryColor: '#2db4a5' },
-  { id: 'blue', label: 'Ocean Blue', description: 'Classic navigation blue', primaryColor: '#3b82f6' },
-  { id: 'purple', label: 'Amethyst', description: 'Rich purple accent', primaryColor: '#8b5cf6' },
-  { id: 'orange', label: 'Sunset', description: 'Warm orange tones', primaryColor: '#f97316' },
-  { id: 'rose', label: 'Rose', description: 'Soft pink accents', primaryColor: '#f43f5e' },
-  { id: 'emerald', label: 'Emerald', description: 'Fresh green theme', primaryColor: '#10b981' },
+  { id: 'teal', label: 'Teal', description: 'Default calming teal', primaryColor: '#2db4a5', lightColor: '#2db4a5', darkColor: '#40c9ba' },
+  { id: 'blue', label: 'Ocean Blue', description: 'Classic navigation blue', primaryColor: '#3b82f6', lightColor: '#3b82f6', darkColor: '#60a5fa' },
+  { id: 'purple', label: 'Amethyst', description: 'Rich purple accent', primaryColor: '#8b5cf6', lightColor: '#8b5cf6', darkColor: '#a78bfa' },
+  { id: 'orange', label: 'Sunset', description: 'Warm orange tones', primaryColor: '#f97316', lightColor: '#f97316', darkColor: '#fb923c' },
+  { id: 'rose', label: 'Rose', description: 'Soft pink accents', primaryColor: '#f43f5e', lightColor: '#f43f5e', darkColor: '#fb7185' },
+  { id: 'emerald', label: 'Emerald', description: 'Fresh green theme', primaryColor: '#10b981', lightColor: '#10b981', darkColor: '#34d399' },
 ];
 
 // HSL values for each theme (light mode primary, dark mode primary)

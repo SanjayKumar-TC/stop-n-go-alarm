@@ -149,10 +149,18 @@ export const SettingsScreen = ({
                       uiTheme === themeOption.id ? 'bg-primary/10' : ''
                     }`}
                   >
-                    <div 
-                      className="w-5 h-5 rounded-full border-2 border-background shadow-sm flex-shrink-0"
-                      style={{ backgroundColor: themeOption.primaryColor }}
-                    />
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <div 
+                        className="w-4 h-4 rounded-full border border-gray-300 shadow-sm"
+                        style={{ backgroundColor: themeOption.lightColor }}
+                        title="Light mode"
+                      />
+                      <div 
+                        className="w-4 h-4 rounded-full border border-gray-600 shadow-sm"
+                        style={{ backgroundColor: themeOption.darkColor }}
+                        title="Dark mode"
+                      />
+                    </div>
                     <div className="flex-1">
                       <p className="text-foreground text-sm">{themeOption.label}</p>
                       <p className="text-xs text-muted-foreground">{themeOption.description}</p>
