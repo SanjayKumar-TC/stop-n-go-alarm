@@ -138,7 +138,7 @@ export const MapView = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent 
             align="end" 
-            className="bg-background border border-border shadow-lg p-2 min-w-[140px]"
+            className="z-[2000] bg-background border border-border shadow-lg p-2 min-w-[140px]"
           >
             <Button
               variant="ghost"
