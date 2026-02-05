@@ -1,9 +1,5 @@
-android {
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-    }
-}
+// This file is automatically populated by Capacitor
+// Do not manually add plugins here
 
 apply from: "../capacitor-cordova-android-plugins/cordova.variables.gradle"
 
