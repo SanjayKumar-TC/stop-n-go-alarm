@@ -242,8 +242,10 @@ export const SettingsScreen = ({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent 
-                align="end" 
-                className="w-80 bg-background border border-border shadow-lg z-[100] max-h-[70vh] overflow-y-auto"
+                align="start" 
+                side="bottom"
+                sideOffset={4}
+                className="w-80 bg-background border border-border shadow-lg z-[100] max-h-[60vh] overflow-y-auto"
               >
                 {UI_DESIGN_OPTIONS.map((designOption) => (
                   <DropdownMenuItem
