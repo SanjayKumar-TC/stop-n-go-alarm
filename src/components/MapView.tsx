@@ -89,7 +89,7 @@ export const MapView = ({
 
       {/* Header with back button and search */}
       <div className="absolute top-0 left-0 right-0 z-[1000] p-4 pt-10 safe-area-top">
-        <div className="glass-panel rounded-xl p-3 space-y-3">
+        <div className="glass-panel design-card rounded-xl p-3 space-y-3">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -178,7 +178,7 @@ export const MapView = ({
       {/* Bottom Panel with Distance and Time */}
       {destination && (
         <div className="absolute bottom-0 left-0 right-0 z-[1000] p-4 pb-8 safe-area-bottom">
-          <div className="glass-panel rounded-xl p-4 space-y-4">
+          <div className="glass-panel design-card rounded-xl p-4 space-y-4">
             {/* Distance and Time Info */}
             {distance !== null && (
               <div className="flex items-center justify-around py-2 border-b border-border">

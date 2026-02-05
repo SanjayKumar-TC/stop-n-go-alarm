@@ -72,7 +72,7 @@ export const SettingsScreen = ({
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Appearance
           </h2>
-          <div className="glass-panel rounded-xl divide-y divide-border">
+          <div className="glass-panel design-card rounded-xl divide-y divide-border">
             <button
               onClick={() => setTheme('light')}
               className={`w-full flex items-center justify-between p-4 transition-colors ${
@@ -123,7 +123,7 @@ export const SettingsScreen = ({
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Color Theme
           </h2>
-          <div className="glass-panel rounded-xl">
+          <div className="glass-panel design-card rounded-xl">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted/50">
@@ -220,7 +220,7 @@ export const SettingsScreen = ({
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             UI Design
           </h2>
-          <div className="glass-panel rounded-xl">
+          <div className="glass-panel design-card rounded-xl">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted/50">
@@ -315,7 +315,7 @@ export const SettingsScreen = ({
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Alarm
           </h2>
-          <div className="glass-panel rounded-xl divide-y divide-border">
+          <div className="glass-panel design-card rounded-xl divide-y divide-border">
             {/* Sound Toggle */}
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
@@ -378,7 +378,7 @@ export const SettingsScreen = ({
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Alarm Tone
             </h2>
-            <div className="glass-panel rounded-xl divide-y divide-border">
+            <div className="glass-panel design-card rounded-xl divide-y divide-border">
               {TONE_OPTIONS.map((tone) => (
                 <button
                   key={tone.value}
@@ -430,7 +430,7 @@ export const SettingsScreen = ({
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Background Operation
           </h2>
-          <div className="glass-panel rounded-xl p-4">
+          <div className="glass-panel design-card rounded-xl p-4">
             <div className="flex items-start gap-3">
               <div className="p-2 rounded-lg bg-warning/20 flex-shrink-0">
                 <Battery className="w-5 h-5 text-warning" />
