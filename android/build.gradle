@@ -4,9 +4,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:8.9.1"
-        classpath "com.google.gms:google-services:4.4.4"
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22"
+        classpath "com.android.tools.build:gradle:8.7.3"
+        classpath "com.google.gms:google-services:4.4.2"
     }
 }
 
@@ -16,23 +15,6 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-    }
-}
-
-/**
- * Force JVM 17 for all subprojects (including Capacitor plugins in node_modules)
- */
-subprojects { subproject ->
-    subproject.afterEvaluate {
-        // Force Java 17 - Kotlin will inherit from compileOptions
-        if (subproject.hasProperty("android")) {
-            subproject.android {
-                compileOptions {
-                    sourceCompatibility JavaVersion.VERSION_17
-                    targetCompatibility JavaVersion.VERSION_17
-                }
-            }
-        }
     }
 }
 
