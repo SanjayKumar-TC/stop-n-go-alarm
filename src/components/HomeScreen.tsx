@@ -399,7 +399,7 @@ export const HomeScreen = ({
             {/* Mini map preview when collapsed */}
             {!isMapExpanded && (
               <div 
-                className="h-32 relative cursor-pointer"
+                className="h-40 relative cursor-pointer"
                 onClick={() => setIsMapExpanded(true)}
               >
                 <Map
