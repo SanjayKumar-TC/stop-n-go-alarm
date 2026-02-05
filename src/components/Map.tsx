@@ -326,6 +326,10 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
       circleRef.current = null;
     }
     if (routeLineRef.current) {
+      // Also remove the border if it exists
+      if ((routeLineRef.current as any)._border) {
+        (routeLineRef.current as any)._border.remove();
+      }
       routeLineRef.current.remove();
       routeLineRef.current = null;
     }
@@ -353,12 +357,26 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
         const routePoints = await fetchRoute(currentPosition, destination);
         
         if (routePoints && mapRef.current) {
-          // Draw the actual road route
-          routeLineRef.current = L.polyline(routePoints, {
-            color: 'hsl(217, 91%, 60%)', // Google Maps-like blue
-            weight: 5,
-            opacity: 0.8,
+          // Draw dark border/outline first for depth
+          const routeBorder = L.polyline(routePoints, {
+            color: '#1a365d', // Dark navy blue border
+            weight: 8,
+            opacity: 0.9,
+            lineCap: 'round',
+            lineJoin: 'round',
           }).addTo(mapRef.current);
+
+          // Draw the main route on top with brighter blue
+          routeLineRef.current = L.polyline(routePoints, {
+            color: '#3b82f6', // Bright blue route
+            weight: 5,
+            opacity: 1,
+            lineCap: 'round',
+            lineJoin: 'round',
+          }).addTo(mapRef.current);
+
+          // Store border for cleanup
+          (routeLineRef.current as any)._border = routeBorder;
 
           // Fit map to show the route
           const bounds = routeLineRef.current.getBounds();
@@ -371,10 +389,10 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
               [destination.lat, destination.lng]
             ],
             {
-              color: 'hsl(174, 72%, 50%)',
-              weight: 3,
-              opacity: 0.7,
-              dashArray: '10, 10',
+              color: '#1e40af',
+              weight: 4,
+              opacity: 0.8,
+              dashArray: '12, 8',
             }
           ).addTo(mapRef.current);
 
