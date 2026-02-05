@@ -134,7 +134,7 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
     const map = L.map(mapContainerRef.current, {
       center,
       zoom: 15,
-      zoomControl: true,
+      zoomControl: false,
       rotate: true,
       rotateControl: {
         closeOnZeroBearing: false,
