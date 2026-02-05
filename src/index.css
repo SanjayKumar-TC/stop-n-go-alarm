@@ -225,32 +225,78 @@
   color: hsl(var(--primary)) !important;
 }
 
-/* Current location marker with pulse animation */
+/* Current location marker - Google Maps style */
 .current-location-marker {
   background: transparent !important;
   border: none !important;
 }
 
-.location-pulse-ring {
+/* Container for Google Maps style location marker */
+.gmap-location-container {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Blue pulsing ring */
+.location-pulse-ring-gmap {
   position: absolute;
-  width: 44px;
-  height: 44px;
+  width: 60px;
+  height: 60px;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  background: rgba(45, 180, 165, 0.3);
-  animation: location-pulse 2s ease-out infinite;
-  z-index: 999;
+  background: rgba(66, 133, 244, 0.25);
+  animation: gmap-pulse 2s ease-out infinite;
+  z-index: 1;
 }
 
-@keyframes location-pulse {
+/* Directional cone/fan showing heading */
+.location-direction-cone {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  top: 50%;
+  left: 50%;
+  transform-origin: center center;
+  z-index: 2;
+  /* Create a cone shape pointing right (will be rotated by heading) */
+  background: conic-gradient(
+    from -30deg at 50% 50%,
+    transparent 0deg,
+    rgba(66, 133, 244, 0.35) 30deg,
+    rgba(66, 133, 244, 0.35) 30deg,
+    transparent 60deg
+  );
+  clip-path: polygon(50% 50%, 100% 20%, 100% 80%);
+  margin-left: -40px;
+  margin-top: -40px;
+  transition: transform 0.3s ease-out;
+}
+
+/* Main blue dot in center */
+.location-dot-gmap {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  background: #4285F4;
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 3;
+}
+
+@keyframes gmap-pulse {
   0% {
-    transform: translate(-50%, -50%) scale(0.5);
+    transform: translate(-50%, -50%) scale(0.6);
     opacity: 1;
   }
   100% {
-    transform: translate(-50%, -50%) scale(1.5);
+    transform: translate(-50%, -50%) scale(1.4);
     opacity: 0;
   }
 }
