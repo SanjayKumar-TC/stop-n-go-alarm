@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-rotate';
@@ -12,6 +12,65 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
+
+// Decode polyline from OSRM response
+const decodePolyline = (encoded: string): [number, number][] => {
+  const points: [number, number][] = [];
+  let index = 0;
+  let lat = 0;
+  let lng = 0;
+
+  while (index < encoded.length) {
+    let shift = 0;
+    let result = 0;
+    let byte: number;
+
+    do {
+      byte = encoded.charCodeAt(index++) - 63;
+      result |= (byte & 0x1f) << shift;
+      shift += 5;
+    } while (byte >= 0x20);
+
+    const deltaLat = result & 1 ? ~(result >> 1) : result >> 1;
+    lat += deltaLat;
+
+    shift = 0;
+    result = 0;
+
+    do {
+      byte = encoded.charCodeAt(index++) - 63;
+      result |= (byte & 0x1f) << shift;
+      shift += 5;
+    } while (byte >= 0x20);
+
+    const deltaLng = result & 1 ? ~(result >> 1) : result >> 1;
+    lng += deltaLng;
+
+    points.push([lat / 1e5, lng / 1e5]);
+  }
+
+  return points;
+};
+
+// Fetch route from OSRM
+const fetchRoute = async (
+  start: { lat: number; lng: number },
+  end: { lat: number; lng: number }
+): Promise<[number, number][] | null> => {
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=polyline`;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.code === 'Ok' && data.routes?.[0]?.geometry) {
+      return decodePolyline(data.routes[0].geometry);
+    }
+    return null;
+  } catch (error) {
+    console.error('Failed to fetch route:', error);
+    return null;
+  }
+};
 
 export type MapTheme = 'dark' | 'light' | 'satellite' | 'traffic';
 
@@ -288,27 +347,46 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
       weight: 2,
     }).addTo(mapRef.current);
 
-    // Add route line from current position to destination
+    // Fetch and draw actual route from current position to destination
     if (showRoute && currentPosition) {
-      routeLineRef.current = L.polyline(
-        [
-          [currentPosition.lat, currentPosition.lng],
-          [destination.lat, destination.lng]
-        ],
-        {
-          color: 'hsl(174, 72%, 50%)',
-          weight: 3,
-          opacity: 0.7,
-          dashArray: '10, 10',
-        }
-      ).addTo(mapRef.current);
+      const drawRoute = async () => {
+        const routePoints = await fetchRoute(currentPosition, destination);
+        
+        if (routePoints && mapRef.current) {
+          // Draw the actual road route
+          routeLineRef.current = L.polyline(routePoints, {
+            color: 'hsl(217, 91%, 60%)', // Google Maps-like blue
+            weight: 5,
+            opacity: 0.8,
+          }).addTo(mapRef.current);
 
-      // Fit map to show both points
-      const bounds = L.latLngBounds(
-        [currentPosition.lat, currentPosition.lng],
-        [destination.lat, destination.lng]
-      );
-      mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+          // Fit map to show the route
+          const bounds = routeLineRef.current.getBounds();
+          mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+        } else if (mapRef.current) {
+          // Fallback to straight line if route fetch fails
+          routeLineRef.current = L.polyline(
+            [
+              [currentPosition.lat, currentPosition.lng],
+              [destination.lat, destination.lng]
+            ],
+            {
+              color: 'hsl(174, 72%, 50%)',
+              weight: 3,
+              opacity: 0.7,
+              dashArray: '10, 10',
+            }
+          ).addTo(mapRef.current);
+
+          const bounds = L.latLngBounds(
+            [currentPosition.lat, currentPosition.lng],
+            [destination.lat, destination.lng]
+          );
+          mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+        }
+      };
+
+      drawRoute();
     }
   }, [destination, alertRadius, isAlarmActive, currentPosition, showRoute]);
 
