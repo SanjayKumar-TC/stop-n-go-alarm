@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, MapPin, Clock, Navigation, Sun, Moon, Globe, Layers } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Navigation, Sun, Moon, Globe, Layers, Map as MapIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Map, MapTheme } from '@/components/Map';
 import { LocationSearch } from '@/components/LocationSearch';
 import { formatDistance, calculateDistance } from '@/hooks/useGeolocation';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface MapThemeOption {
   id: MapTheme;
@@ -118,28 +123,43 @@ export const MapView = ({
         </div>
       )}
 
-      {/* Map Theme Selector */}
+      {/* Map Theme Selector Dropdown */}
       <div className="absolute top-36 right-4 z-[1000]">
-        <div className="glass-panel rounded-lg p-1">
-          <ToggleGroup 
-            type="single" 
-            value={mapTheme} 
-            onValueChange={(value) => value && setMapTheme(value as MapTheme)}
-            className="flex flex-col gap-1"
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              size="icon"
+              variant="secondary"
+              className="h-10 w-10 rounded-full shadow-lg bg-background/90 backdrop-blur-sm hover:bg-background"
+              title="Map themes"
+            >
+              <MapIcon className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent 
+            align="end" 
+            className="bg-background border border-border shadow-lg p-1 min-w-0"
           >
-            {MAP_THEME_OPTIONS.map((option) => (
-              <ToggleGroupItem 
-                key={option.id} 
-                value={option.id} 
-                aria-label={option.label}
-                className="h-9 w-9 p-0 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-                title={option.label}
-              >
-                {option.icon}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-        </div>
+            <ToggleGroup 
+              type="single" 
+              value={mapTheme} 
+              onValueChange={(value) => value && setMapTheme(value as MapTheme)}
+              className="flex flex-col gap-1"
+            >
+              {MAP_THEME_OPTIONS.map((option) => (
+                <ToggleGroupItem 
+                  key={option.id} 
+                  value={option.id} 
+                  aria-label={option.label}
+                  className="h-9 w-full px-3 gap-2 justify-start data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                >
+                  {option.icon}
+                  <span className="text-sm">{option.label}</span>
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Bottom Panel with Distance and Time */}
