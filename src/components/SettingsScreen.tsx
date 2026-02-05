@@ -215,7 +215,7 @@ export const SettingsScreen = ({
           ) : (
             <>
               <Play className="w-4 h-4 mr-2" />
-              Test Alarm (Continuous)
+              Test Alarm
             </>
           )}
         </Button>
