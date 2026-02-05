@@ -144,6 +144,26 @@
      UI DESIGN SYSTEM - Applied via CSS classes
      ======================================== */
   
+  /* Smooth transitions for design changes */
+  .glass-panel,
+  .design-card,
+  .design-button,
+  button,
+  [role="button"],
+  input,
+  select,
+  textarea,
+  .rounded-xl,
+  .rounded-lg,
+  .rounded-md {
+    transition: 
+      border-radius 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      background 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      backdrop-filter 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      border 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
   /* Modern Design (Default) */
   .design-modern .glass-panel {
     background: var(--gradient-panel);
