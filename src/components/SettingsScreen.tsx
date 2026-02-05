@@ -124,9 +124,12 @@ export const SettingsScreen = ({
             Color Theme
           </h2>
           <div className="glass-panel design-card rounded-xl">
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
-                <button className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted/50">
+                <button 
+                  className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted/50 touch-manipulation"
+                  onTouchStart={(e) => e.stopPropagation()}
+                >
                   <div className="flex items-center gap-3">
                     <div 
                       className="w-5 h-5 rounded-full border-2 border-background shadow-sm"
@@ -223,9 +226,12 @@ export const SettingsScreen = ({
             UI Design
           </h2>
           <div className="glass-panel design-card rounded-xl">
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
-                <button className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted/50">
+                <button 
+                  className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted/50 touch-manipulation"
+                  onTouchStart={(e) => e.stopPropagation()}
+                >
                   <div className="flex items-center gap-3">
                     <div className="w-5 h-5 rounded border-2 border-primary bg-muted flex items-center justify-center">
                       <div 
