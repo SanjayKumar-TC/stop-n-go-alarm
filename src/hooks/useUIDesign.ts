@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export type UIDesign = 'modern' | 'glass' | 'rounded' | 'sharp' | 'soft' | 'minimal';
+export type UIDesign = 'modern' | 'glass' | 'rounded' | 'sharp' | 'soft' | 'minimal' | 'brutalist' | 'neon' | 'retro';
 
 export interface UIDesignOption {
   id: UIDesign;
@@ -60,6 +60,30 @@ export const UI_DESIGN_OPTIONS: UIDesignOption[] = [
     shadowStyle: 'none',
     panelStyle: 'minimal'
   },
+  { 
+    id: 'brutalist', 
+    label: 'Brutalist', 
+    description: 'Bold borders, raw aesthetic',
+    borderRadius: '0',
+    shadowStyle: '4px 4px 0 0 currentColor',
+    panelStyle: 'brutalist'
+  },
+  { 
+    id: 'neon', 
+    label: 'Neon', 
+    description: 'Glowing cyberpunk vibes',
+    borderRadius: '0.5rem',
+    shadowStyle: '0 0 20px rgba(0, 255, 255, 0.5)',
+    panelStyle: 'neon'
+  },
+  { 
+    id: 'retro', 
+    label: 'Retro', 
+    description: 'Vintage pixel-perfect style',
+    borderRadius: '0',
+    shadowStyle: '3px 3px 0 0 #000',
+    panelStyle: 'retro'
+  },
 ];
 
 export const useUIDesign = () => {
@@ -82,7 +106,7 @@ export const useUIDesign = () => {
     root.style.setProperty('--design-shadow', designOption.shadowStyle);
     
     // Remove all design classes first
-    root.classList.remove('design-modern', 'design-glass', 'design-rounded', 'design-sharp', 'design-soft', 'design-minimal');
+    root.classList.remove('design-modern', 'design-glass', 'design-rounded', 'design-sharp', 'design-soft', 'design-minimal', 'design-brutalist', 'design-neon', 'design-retro');
     
     // Add current design class
     root.classList.add(`design-${uiDesign}`);
