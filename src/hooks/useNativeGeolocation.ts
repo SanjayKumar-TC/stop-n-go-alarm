@@ -8,6 +8,7 @@ const BackgroundGeolocation = registerPlugin<BackgroundGeolocationPlugin>('Backg
 
 export interface NativeGeolocationState {
   position: { lat: number; lng: number } | null;
+  heading: number | null;
   error: string | null;
   isLoading: boolean;
   isWatching: boolean;
@@ -39,6 +40,7 @@ const defaultOptions: UseNativeGeolocationOptions = {
 export const useNativeGeolocation = (options: UseNativeGeolocationOptions = defaultOptions) => {
   const [state, setState] = useState<NativeGeolocationState>({
     position: null,
+    heading: null,
     error: null,
     isLoading: true,
     isWatching: false,
@@ -75,6 +77,7 @@ export const useNativeGeolocation = (options: UseNativeGeolocationOptions = defa
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           },
+          heading: position.coords.heading ?? prev.heading,
           error: null,
           isLoading: false,
         }));
@@ -92,6 +95,7 @@ export const useNativeGeolocation = (options: UseNativeGeolocationOptions = defa
                 lat: position.coords.latitude,
                 lng: position.coords.longitude,
               },
+              heading: position.coords.heading ?? prev.heading,
               error: null,
               isLoading: false,
             }));
@@ -161,6 +165,7 @@ export const useNativeGeolocation = (options: UseNativeGeolocationOptions = defa
             setState(prev => ({
               ...prev,
               position: newPosition,
+              heading: location.bearing ?? prev.heading,
               error: null,
             }));
 
@@ -214,6 +219,7 @@ export const useNativeGeolocation = (options: UseNativeGeolocationOptions = defa
                   lat: position.coords.latitude,
                   lng: position.coords.longitude,
                 },
+                heading: position.coords.heading ?? prev.heading,
                 error: null,
                 isLoading: false,
               }));
@@ -240,6 +246,7 @@ export const useNativeGeolocation = (options: UseNativeGeolocationOptions = defa
               lat: position.coords.latitude,
               lng: position.coords.longitude,
             },
+            heading: position.coords.heading ?? prev.heading,
             error: null,
             isLoading: false,
           }));

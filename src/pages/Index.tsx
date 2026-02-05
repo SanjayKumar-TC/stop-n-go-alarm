@@ -31,6 +31,7 @@ const Index = () => {
   const { toast } = useToast();
   const { 
     position, 
+    heading,
     error, 
     isLoading, 
     startWatching, 
@@ -367,6 +368,7 @@ const Index = () => {
   return (
     <HomeScreen
       currentPosition={currentPosition}
+      heading={heading}
       destination={destination}
       isLoadingLocation={isLoading}
       isAlarmActive={isAlarmActive}

@@ -50,6 +50,7 @@ const MAP_THEME_OPTIONS: MapThemeOption[] = [
 
 interface HomeScreenProps {
   currentPosition: { lat: number; lng: number } | null;
+  heading: number | null;
   destination: { lat: number; lng: number; name?: string } | null;
   isLoadingLocation: boolean;
   isAlarmActive: boolean;
@@ -88,6 +89,7 @@ const estimateTravelTime = (distanceMeters: number, mode: TransportMode): string
 
 export const HomeScreen = ({
   currentPosition,
+  heading,
   destination,
   isLoadingLocation,
   isAlarmActive,
@@ -480,6 +482,7 @@ export const HomeScreen = ({
               >
                 <Map
                   currentPosition={currentPosition}
+                  heading={heading}
                   destination={destination}
                   alertRadius={alertRadius}
                   onMapClick={handleMapClick}
@@ -498,6 +501,7 @@ export const HomeScreen = ({
               <div className={`transition-all duration-300 ${isMapExpanded ? 'h-80' : 'h-0'}`}>
                 <Map
                   currentPosition={currentPosition}
+                  heading={heading}
                   destination={destination}
                   alertRadius={alertRadius}
                   onMapClick={handleMapClick}

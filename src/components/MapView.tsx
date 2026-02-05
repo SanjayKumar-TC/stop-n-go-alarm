@@ -78,6 +78,7 @@ export const MapView = ({
       {/* Map */}
       <Map
         currentPosition={currentPosition}
+        heading={null}
         destination={destination}
         alertRadius={alertRadius}
         onMapClick={onMapClick}
