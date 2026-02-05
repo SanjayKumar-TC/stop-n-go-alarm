@@ -116,45 +116,23 @@ const MAP_THEMES: Record<MapTheme, MapThemeConfig & { labelsUrl?: string }> = {
 
 // Custom icons with high z-index for visibility
 const createCurrentLocationIcon = (heading: number | null) => {
-  // If heading is available, show navigation arrow, otherwise show dot with pulse
   const hasHeading = heading !== null && !isNaN(heading);
-  const rotation = hasHeading ? heading : 0;
+  const rotation = hasHeading ? heading - 90 : 0; // Adjust rotation so 0° points up
+  
+  // Google Maps-style: blue dot with pulsing ring and directional cone
+  const coneHtml = hasHeading 
+    ? `<div class="location-direction-cone" style="transform: rotate(${rotation}deg);"></div>`
+    : '';
   
   return L.divIcon({
     className: 'current-location-marker',
-    html: hasHeading 
-      ? `<div style="position: relative; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
-          <div class="location-pulse-ring"></div>
-          <div style="
-            width: 36px;
-            height: 36px;
-            transform: rotate(${rotation}deg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            z-index: 2;
-          ">
-            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L4 20L12 16L20 20L12 2Z" fill="hsl(174, 72%, 50%)" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
-            </svg>
-          </div>
-        </div>`
-      : `<div style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">
-          <div class="location-pulse-ring"></div>
-          <div style="
-            width: 22px;
-            height: 22px;
-            background: linear-gradient(135deg, hsl(174, 72%, 55%), hsl(174, 72%, 45%));
-            border: 3px solid white;
-            border-radius: 50%;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5), 0 0 0 2px rgba(45, 180, 165, 0.3);
-            position: relative;
-            z-index: 2;
-          "></div>
-        </div>`,
-    iconSize: hasHeading ? [48, 48] : [44, 44],
-    iconAnchor: hasHeading ? [24, 24] : [22, 22],
+    html: `<div class="gmap-location-container">
+      <div class="location-pulse-ring-gmap"></div>
+      ${coneHtml}
+      <div class="location-dot-gmap"></div>
+    </div>`,
+    iconSize: [80, 80],
+    iconAnchor: [40, 40],
   });
 };
 
