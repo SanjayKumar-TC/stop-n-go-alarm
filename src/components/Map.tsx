@@ -382,9 +382,13 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
           // Store border for cleanup
           (routeLineRef.current as any)._border = routeBorder;
 
-          // Fit map to show the route
+          // Fit map to show the route with smooth animation
           const bounds = routeLineRef.current.getBounds();
-          mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+          mapRef.current.fitBounds(bounds, { 
+            padding: [50, 50],
+            animate: true,
+            duration: 0.8,
+          });
         } else if (mapRef.current) {
           // Fallback to straight line if route fetch fails
           routeLineRef.current = L.polyline(
@@ -406,7 +410,11 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
             [currentPosition.lat, currentPosition.lng],
             [destination.lat, destination.lng]
           );
-          mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+          mapRef.current.fitBounds(bounds, { 
+            padding: [50, 50],
+            animate: true,
+            duration: 0.8,
+          });
         }
       };
 
