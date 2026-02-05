@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-rotate';
@@ -115,24 +115,48 @@ const MAP_THEMES: Record<MapTheme, MapThemeConfig & { labelsUrl?: string }> = {
 };
 
 // Custom icons with high z-index for visibility
-const createCurrentLocationIcon = () => L.divIcon({
-  className: 'current-location-marker',
-  html: `<div style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">
-    <div class="location-pulse-ring"></div>
-    <div style="
-      width: 22px;
-      height: 22px;
-      background: linear-gradient(135deg, hsl(174, 72%, 55%), hsl(174, 72%, 45%));
-      border: 3px solid white;
-      border-radius: 50%;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.5), 0 0 0 2px rgba(45, 180, 165, 0.3);
-      position: relative;
-      z-index: 2;
-    "></div>
-  </div>`,
-  iconSize: [44, 44],
-  iconAnchor: [22, 22],
-});
+const createCurrentLocationIcon = (heading: number | null) => {
+  // If heading is available, show navigation arrow, otherwise show dot with pulse
+  const hasHeading = heading !== null && !isNaN(heading);
+  const rotation = hasHeading ? heading : 0;
+  
+  return L.divIcon({
+    className: 'current-location-marker',
+    html: hasHeading 
+      ? `<div style="position: relative; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+          <div class="location-pulse-ring"></div>
+          <div style="
+            width: 36px;
+            height: 36px;
+            transform: rotate(${rotation}deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+          ">
+            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L4 20L12 16L20 20L12 2Z" fill="hsl(174, 72%, 50%)" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>`
+      : `<div style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">
+          <div class="location-pulse-ring"></div>
+          <div style="
+            width: 22px;
+            height: 22px;
+            background: linear-gradient(135deg, hsl(174, 72%, 55%), hsl(174, 72%, 45%));
+            border: 3px solid white;
+            border-radius: 50%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5), 0 0 0 2px rgba(45, 180, 165, 0.3);
+            position: relative;
+            z-index: 2;
+          "></div>
+        </div>`,
+    iconSize: hasHeading ? [48, 48] : [44, 44],
+    iconAnchor: hasHeading ? [24, 24] : [22, 22],
+  });
+};
 
 const createDestinationIcon = () => L.divIcon({
   className: 'destination-marker',
@@ -147,6 +171,7 @@ const createDestinationIcon = () => L.divIcon({
 
 interface MapProps {
   currentPosition: { lat: number; lng: number } | null;
+  heading: number | null;
   destination: { lat: number; lng: number } | null;
   alertRadius: number;
   onMapClick: (lat: number, lng: number) => void;
@@ -156,7 +181,7 @@ interface MapProps {
   buttonOffsetBottom?: string;
 }
 
-export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isAlarmActive, showRoute = true, theme = 'dark', buttonOffsetBottom = 'bottom-4' }: MapProps) => {
+export const Map = ({ currentPosition, heading, destination, alertRadius, onMapClick, isAlarmActive, showRoute = true, theme = 'dark', buttonOffsetBottom = 'bottom-4' }: MapProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const currentMarkerRef = useRef<L.Marker | null>(null);
@@ -294,12 +319,13 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
     // Update or create current location marker
     if (currentMarkerRef.current) {
       currentMarkerRef.current.setLatLng([currentPosition.lat, currentPosition.lng]);
+      currentMarkerRef.current.setIcon(createCurrentLocationIcon(heading));
     } else {
       currentMarkerRef.current = L.marker([currentPosition.lat, currentPosition.lng], {
-        icon: createCurrentLocationIcon(),
+        icon: createCurrentLocationIcon(heading),
       }).addTo(mapRef.current);
     }
-  }, [currentPosition]);
+  }, [currentPosition, heading]);
 
   // Update destination marker and circle
   useEffect(() => {
