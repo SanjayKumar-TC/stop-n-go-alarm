@@ -205,11 +205,44 @@ export const HomeScreen = ({
     }
   };
 
-  const handleMapClick = (lat: number, lng: number) => {
+  const handleMapClick = async (lat: number, lng: number) => {
     if (isAlarmActive) return;
-    const name = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-    setDestinationName(name);
-    onSetDestination(lat, lng, name);
+    
+    // Set temporary name while loading
+    const tempName = 'Loading location...';
+    setDestinationName(tempName);
+    onSetDestination(lat, lng, tempName);
+    
+    // Reverse geocode to get location name
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+        { headers: { 'Accept-Language': 'en' } }
+      );
+      const data = await response.json();
+      
+      // Extract meaningful name from address
+      const address = data.address || {};
+      const name = address.building || 
+                   address.amenity || 
+                   address.shop ||
+                   address.leisure ||
+                   address.tourism ||
+                   address.road ||
+                   address.neighbourhood ||
+                   address.suburb ||
+                   address.city_district ||
+                   data.display_name?.split(',').slice(0, 2).join(',') ||
+                   'Selected Location';
+      
+      setDestinationName(name);
+      onSetDestination(lat, lng, name);
+    } catch (error) {
+      console.error('Reverse geocoding failed:', error);
+      const fallbackName = 'Selected Location';
+      setDestinationName(fallbackName);
+      onSetDestination(lat, lng, fallbackName);
+    }
   };
 
   const handleSelectFavorite = (fav: FavoriteDestination) => {

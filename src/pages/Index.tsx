@@ -67,10 +67,44 @@ const Index = () => {
 
   const currentPosition = position;
 
-  const handleMapClick = useCallback((lat: number, lng: number) => {
+  const handleMapClick = useCallback(async (lat: number, lng: number) => {
     if (isAlarmActive) return;
-    setDestination({ lat, lng });
-  }, [isAlarmActive]);
+    
+    // Set destination with temporary name
+    setDestination({ lat, lng, name: 'Loading location...' });
+    
+    // Reverse geocode to get location name
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+        { headers: { 'Accept-Language': 'en' } }
+      );
+      const data = await response.json();
+      
+      // Extract meaningful name from address
+      const address = data.address || {};
+      const name = address.building || 
+                   address.amenity || 
+                   address.shop ||
+                   address.leisure ||
+                   address.tourism ||
+                   address.road ||
+                   address.neighbourhood ||
+                   address.suburb ||
+                   address.city_district ||
+                   data.display_name?.split(',').slice(0, 2).join(',') ||
+                   'Selected Location';
+      
+      setDestination({ lat, lng, name });
+      toast({
+        title: "Destination Set",
+        description: name,
+      });
+    } catch (error) {
+      console.error('Reverse geocoding failed:', error);
+      setDestination({ lat, lng, name: 'Selected Location' });
+    }
+  }, [isAlarmActive, toast]);
 
   const handleSetDestination = useCallback((lat: number, lng: number, name: string) => {
     setDestination({ lat, lng, name });
