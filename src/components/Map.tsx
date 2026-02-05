@@ -12,13 +12,17 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
-export type MapTheme = 'dark' | 'light' | 'satellite';
+export type MapTheme = 'dark' | 'light' | 'satellite' | 'traffic';
 
 interface MapThemeConfig {
   url: string;
   attribution: string;
   background: string;
+  trafficUrl?: string;
 }
+
+// TomTom API key for traffic layer
+const TOMTOM_API_KEY = '62IjLnK5pVM2HxLhdXPN63bcrG8jvbYt';
 
 // High-quality map themes with clear labels (no API key required)
 const MAP_THEMES: Record<MapTheme, MapThemeConfig & { labelsUrl?: string }> = {
@@ -40,6 +44,13 @@ const MAP_THEMES: Record<MapTheme, MapThemeConfig & { labelsUrl?: string }> = {
     labelsUrl: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
     attribution: '&copy; Esri, Maxar, Earthstar Geographics',
     background: 'hsl(220, 25%, 15%)',
+  },
+  traffic: {
+    // Light base map with TomTom traffic overlay
+    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    trafficUrl: `https://api.tomtom.com/traffic/map/4/tile/flow/relative0/{z}/{x}/{y}.png?key=${TOMTOM_API_KEY}&tileSize=256`,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a> &copy; <a href="https://www.tomtom.com">TomTom</a>',
+    background: 'hsl(0, 0%, 98%)',
   },
 };
 
@@ -104,6 +115,7 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
   const routeLineRef = useRef<L.Polyline | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const labelsLayerRef = useRef<L.TileLayer | null>(null);
+  const trafficLayerRef = useRef<L.TileLayer | null>(null);
   const hasInitializedRef = useRef(false);
 
   const themeConfig = MAP_THEMES[theme];
@@ -138,6 +150,15 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
       }).addTo(map);
     }
 
+    // Add traffic layer if available
+    if (themeConfig.trafficUrl) {
+      trafficLayerRef.current = L.tileLayer(themeConfig.trafficUrl, {
+        maxZoom: 20,
+        tileSize: 256,
+        opacity: 0.8,
+      }).addTo(map);
+    }
+
     // Handle map clicks
     map.on('click', (e: L.LeafletMouseEvent) => {
       onMapClick(e.latlng.lat, e.latlng.lng);
@@ -163,6 +184,10 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
       labelsLayerRef.current.remove();
       labelsLayerRef.current = null;
     }
+    if (trafficLayerRef.current) {
+      trafficLayerRef.current.remove();
+      trafficLayerRef.current = null;
+    }
 
     // Add new tile layer with retina support
     tileLayerRef.current = L.tileLayer(themeConfig.url, {
@@ -176,6 +201,15 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
       labelsLayerRef.current = L.tileLayer(themeConfig.labelsUrl, {
         maxZoom: 20,
         tileSize: 256,
+      }).addTo(mapRef.current);
+    }
+
+    // Add traffic layer if available
+    if (themeConfig.trafficUrl) {
+      trafficLayerRef.current = L.tileLayer(themeConfig.trafficUrl, {
+        maxZoom: 20,
+        tileSize: 256,
+        opacity: 0.8,
       }).addTo(mapRef.current);
     }
   }, [theme, themeConfig]);
