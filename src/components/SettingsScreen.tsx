@@ -1,11 +1,18 @@
 import { useState } from 'react';
-import { ArrowLeft, Sun, Moon, Monitor, Bell, BellOff, Vibrate, Volume2, VolumeX, Play, Battery, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Sun, Moon, Monitor, Bell, BellOff, Vibrate, Volume2, VolumeX, Play, Battery, HelpCircle, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { useTheme } from '@/hooks/useTheme';
+import { useUITheme, UI_THEME_OPTIONS } from '@/hooks/useUITheme';
 import { AlarmSettings, AlarmTone } from '@/hooks/useAlarm';
 import { BatteryOptimizationGuide } from '@/components/BatteryOptimizationGuide';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface SettingsScreenProps {
   alarmSettings: AlarmSettings;
@@ -29,12 +36,15 @@ export const SettingsScreen = ({
   onBack,
 }: SettingsScreenProps) => {
   const { theme, setTheme } = useTheme();
+  const { uiTheme, setUITheme } = useUITheme();
   const [showBatteryGuide, setShowBatteryGuide] = useState(false);
 
   // Show battery optimization guide
   if (showBatteryGuide) {
     return <BatteryOptimizationGuide onDismiss={() => setShowBatteryGuide(false)} />;
   }
+
+  const currentUITheme = UI_THEME_OPTIONS.find(t => t.id === uiTheme) || UI_THEME_OPTIONS[0];
 
   return (
     <div className="min-h-screen bg-background">
@@ -67,7 +77,7 @@ export const SettingsScreen = ({
               }`}
             >
               <div className="flex items-center gap-3">
-                <Sun className="w-5 h-5 text-yellow-500" />
+                <Sun className="w-5 h-5 text-warning" />
                 <span className="text-foreground">Light</span>
               </div>
               {theme === 'light' && (
@@ -81,7 +91,7 @@ export const SettingsScreen = ({
               }`}
             >
               <div className="flex items-center gap-3">
-                <Moon className="w-5 h-5 text-blue-400" />
+                <Moon className="w-5 h-5 text-primary" />
                 <span className="text-foreground">Dark</span>
               </div>
               {theme === 'dark' && (
@@ -102,6 +112,58 @@ export const SettingsScreen = ({
                 <div className="w-2 h-2 rounded-full bg-primary" />
               )}
             </button>
+          </div>
+        </section>
+
+        {/* Color Theme Section */}
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+            Color Theme
+          </h2>
+          <div className="glass-panel rounded-xl">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted/50">
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-5 h-5 rounded-full border-2 border-background shadow-sm"
+                      style={{ backgroundColor: currentUITheme.primaryColor }}
+                    />
+                    <div className="text-left">
+                      <p className="text-foreground">{currentUITheme.label}</p>
+                      <p className="text-xs text-muted-foreground">{currentUITheme.description}</p>
+                    </div>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                align="end" 
+                className="w-64 bg-background border border-border shadow-lg z-[100]"
+              >
+                {UI_THEME_OPTIONS.map((themeOption) => (
+                  <DropdownMenuItem
+                    key={themeOption.id}
+                    onClick={() => setUITheme(themeOption.id)}
+                    className={`flex items-center gap-3 p-3 cursor-pointer ${
+                      uiTheme === themeOption.id ? 'bg-primary/10' : ''
+                    }`}
+                  >
+                    <div 
+                      className="w-5 h-5 rounded-full border-2 border-background shadow-sm flex-shrink-0"
+                      style={{ backgroundColor: themeOption.primaryColor }}
+                    />
+                    <div className="flex-1">
+                      <p className="text-foreground text-sm">{themeOption.label}</p>
+                      <p className="text-xs text-muted-foreground">{themeOption.description}</p>
+                    </div>
+                    {uiTheme === themeOption.id && (
+                      <div className="w-2 h-2 rounded-full bg-primary" />
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </section>
 
