@@ -115,20 +115,14 @@ const MAP_THEMES: Record<MapTheme, MapThemeConfig & { labelsUrl?: string }> = {
 };
 
 // Custom icons with high z-index for visibility
-const createCurrentLocationIcon = (heading: number | null) => {
-  const hasHeading = heading !== null && !isNaN(heading);
-  const rotation = hasHeading ? heading - 90 : 0; // Adjust rotation so 0° points up
-  
+const createCurrentLocationIcon = () => {
   // Google Maps-style: blue dot with pulsing ring and directional cone
-  const coneHtml = hasHeading 
-    ? `<div class="location-direction-cone" style="transform: rotate(${rotation}deg);"></div>`
-    : '';
-  
+  // Cone is always rendered but hidden via CSS when no heading
   return L.divIcon({
     className: 'current-location-marker',
     html: `<div class="gmap-location-container">
       <div class="location-pulse-ring-gmap"></div>
-      ${coneHtml}
+      <div class="location-direction-cone" style="opacity: 0;"></div>
       <div class="location-dot-gmap"></div>
     </div>`,
     iconSize: [80, 80],
@@ -297,13 +291,31 @@ export const Map = ({ currentPosition, heading, destination, alertRadius, onMapC
     // Update or create current location marker
     if (currentMarkerRef.current) {
       currentMarkerRef.current.setLatLng([currentPosition.lat, currentPosition.lng]);
-      currentMarkerRef.current.setIcon(createCurrentLocationIcon(heading));
     } else {
       currentMarkerRef.current = L.marker([currentPosition.lat, currentPosition.lng], {
-        icon: createCurrentLocationIcon(heading),
+        icon: createCurrentLocationIcon(),
       }).addTo(mapRef.current);
     }
-  }, [currentPosition, heading]);
+  }, [currentPosition]);
+
+  // Smoothly update heading rotation without recreating the icon
+  useEffect(() => {
+    if (!currentMarkerRef.current) return;
+
+    const markerElement = currentMarkerRef.current.getElement();
+    if (!markerElement) return;
+
+    const cone = markerElement.querySelector('.location-direction-cone') as HTMLElement;
+    if (!cone) return;
+
+    if (heading !== null && !isNaN(heading)) {
+      const rotation = heading - 90; // Adjust so 0° points up
+      cone.style.opacity = '1';
+      cone.style.transform = `rotate(${rotation}deg)`;
+    } else {
+      cone.style.opacity = '0';
+    }
+  }, [heading]);
 
   // Update destination marker and circle
   useEffect(() => {
