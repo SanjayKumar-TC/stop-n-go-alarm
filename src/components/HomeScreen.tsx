@@ -106,10 +106,26 @@ export const HomeScreen = ({
 }: HomeScreenProps) => {
   const [destinationName, setDestinationName] = useState<string>('');
   const [isMapExpanded, setIsMapExpanded] = useState(false);
-  const [transportMode, setTransportMode] = useState<TransportMode>('metro');
-  const [mapTheme, setMapTheme] = useState<MapTheme>('dark');
+  const [transportMode, setTransportMode] = useState<TransportMode>(() => {
+    const saved = localStorage.getItem('transportMode');
+    return (saved as TransportMode) || 'metro';
+  });
+  const [mapTheme, setMapTheme] = useState<MapTheme>(() => {
+    const saved = localStorage.getItem('mapTheme');
+    return (saved as MapTheme) || 'dark';
+  });
   const [currentLocationName, setCurrentLocationName] = useState<string>('');
   const [isLoadingLocationName, setIsLoadingLocationName] = useState(false);
+
+  // Persist transport mode to localStorage
+  useEffect(() => {
+    localStorage.setItem('transportMode', transportMode);
+  }, [transportMode]);
+
+  // Persist map theme to localStorage
+  useEffect(() => {
+    localStorage.setItem('mapTheme', mapTheme);
+  }, [mapTheme]);
 
   // Update destination name when destination changes from map selection
   useEffect(() => {
