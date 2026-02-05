@@ -364,6 +364,8 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
             opacity: 0.9,
             lineCap: 'round',
             lineJoin: 'round',
+            smoothFactor: 0, // Instant rendering during zoom
+            interactive: false, // Non-interactive for performance
           }).addTo(mapRef.current);
 
           // Draw the main route on top with brighter blue
@@ -373,6 +375,8 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
             opacity: 1,
             lineCap: 'round',
             lineJoin: 'round',
+            smoothFactor: 0, // Instant rendering during zoom
+            interactive: false, // Non-interactive for performance
           }).addTo(mapRef.current);
 
           // Store border for cleanup
@@ -393,6 +397,8 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
               weight: 4,
               opacity: 0.8,
               dashArray: '12, 8',
+              smoothFactor: 0,
+              interactive: false,
             }
           ).addTo(mapRef.current);
 
