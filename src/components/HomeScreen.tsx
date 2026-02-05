@@ -304,7 +304,7 @@ export const HomeScreen = ({
       <div className="flex-1 px-4 space-y-4 overflow-y-auto pb-4">
         {/* Alarm Ringing Alert */}
         {isAlarmRinging && (
-          <div className="glass-panel rounded-xl p-4 border-2 border-destructive animate-pulse">
+          <div className="glass-panel design-card rounded-xl p-4 border-2 border-destructive animate-pulse">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-3 rounded-full bg-destructive/20">
                 <Bell className="w-8 h-8 text-destructive" />
@@ -333,7 +333,7 @@ export const HomeScreen = ({
         )}
 
         {/* Current Location */}
-        <div className="glass-panel p-3 rounded-xl">
+        <div className="glass-panel design-card p-3 rounded-xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <div className="p-2 rounded-lg bg-success/20 flex-shrink-0">
@@ -444,7 +444,7 @@ export const HomeScreen = ({
 
         {/* Favorites */}
         {!isAlarmActive && (
-          <div className="glass-panel rounded-xl p-3">
+          <div className="glass-panel design-card rounded-xl p-3">
             <FavoritesList
               favorites={favorites}
               currentDestination={destination}
@@ -457,7 +457,7 @@ export const HomeScreen = ({
 
         {/* Collapsible Map */}
         <Collapsible open={isMapExpanded} onOpenChange={setIsMapExpanded}>
-          <div className="glass-panel rounded-xl overflow-hidden">
+          <div className="glass-panel design-card rounded-xl overflow-hidden">
             <CollapsibleTrigger asChild>
               <Button
                 variant="ghost"
@@ -546,7 +546,7 @@ export const HomeScreen = ({
         </Collapsible>
 
         {/* Travel Details */}
-        <div className="glass-panel rounded-xl p-4 space-y-4">
+        <div className="glass-panel design-card rounded-xl p-4 space-y-4">
           <h3 className="text-sm font-semibold text-foreground">Travel Details</h3>
           
           {destination ? (
@@ -591,12 +591,12 @@ export const HomeScreen = ({
               {/* Distance and Time */}
               {distance !== null && (
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center p-3 rounded-lg bg-muted/50">
+                  <div className="text-center p-3 rounded-lg bg-muted/50 design-card">
                     <MapPin className="w-5 h-5 text-primary mx-auto mb-1" />
                     <p className="text-xl font-bold text-foreground">{formatDistance(distance)}</p>
                     <p className="text-xs text-muted-foreground">Distance</p>
                   </div>
-                  <div className="text-center p-3 rounded-lg bg-muted/50">
+                  <div className="text-center p-3 rounded-lg bg-muted/50 design-card">
                     <Clock className="w-5 h-5 text-primary mx-auto mb-1" />
                     <p className="text-xl font-bold text-foreground">{estimateTravelTime(distance, transportMode)}</p>
                     <p className="text-xs text-muted-foreground">Est. Time ({TRANSPORT_MODES.find(m => m.id === transportMode)?.label})</p>
