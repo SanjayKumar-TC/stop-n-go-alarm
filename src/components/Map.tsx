@@ -357,8 +357,15 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
         const routePoints = await fetchRoute(currentPosition, destination);
         
         if (routePoints && mapRef.current) {
+          // Ensure route connects exactly to markers
+          const fullRoute: [number, number][] = [
+            [currentPosition.lat, currentPosition.lng], // Start at current location
+            ...routePoints,
+            [destination.lat, destination.lng] // End at destination
+          ];
+
           // Draw dark border/outline first for depth
-          const routeBorder = L.polyline(routePoints, {
+          const routeBorder = L.polyline(fullRoute, {
             color: '#1a365d', // Dark navy blue border
             weight: 8,
             opacity: 0.9,
@@ -369,7 +376,7 @@ export const Map = ({ currentPosition, destination, alertRadius, onMapClick, isA
           }).addTo(mapRef.current);
 
           // Draw the main route on top with brighter blue
-          routeLineRef.current = L.polyline(routePoints, {
+          routeLineRef.current = L.polyline(fullRoute, {
             color: '#3b82f6', // Bright blue route
             weight: 5,
             opacity: 1,
