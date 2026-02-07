@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 
-export type AlarmTone = 'gentle' | 'melody' | 'waves' | 'bells';
+export type AlarmTone = 'gentle' | 'melody' | 'waves' | 'bells' | 'beep';
 
 export interface AlarmSettings {
   vibrate: boolean;
@@ -28,6 +28,7 @@ const TONE_FREQUENCIES: Record<AlarmTone, { freq: number; pattern: number[]; wav
   melody: { freq: 528, pattern: [600, 400], waveType: 'sine' },      // Solfeggio frequency - love/healing
   waves: { freq: 432, pattern: [1000, 800], waveType: 'sine' },      // Natural frequency - calming
   bells: { freq: 639, pattern: [500, 500], waveType: 'triangle' },   // Solfeggio frequency - connection
+  beep: { freq: 1000, pattern: [200, 200], waveType: 'square' },     // Classic beep - attention-grabbing
 };
 
 export const useAlarm = (initialSettings?: Partial<AlarmSettings>) => {
