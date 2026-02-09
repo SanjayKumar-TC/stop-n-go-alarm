@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 
-export type AlarmTone = 'gentle' | 'melody' | 'waves' | 'bells';
+export type AlarmTone = 'gentle' | 'melody' | 'waves' | 'bells' | 'melodic';
 
 export interface AlarmSettings {
   vibrate: boolean;
@@ -23,11 +23,12 @@ const DEFAULT_SETTINGS: AlarmSettings = {
 };
 
 // Pleasant, smooth tone configurations using calming frequencies
-const TONE_FREQUENCIES: Record<AlarmTone, { freq: number; pattern: number[]; waveType: OscillatorType }> = {
-  gentle: { freq: 396, pattern: [800, 600], waveType: 'sine' },      // Solfeggio frequency - liberating
-  melody: { freq: 528, pattern: [600, 400], waveType: 'sine' },      // Solfeggio frequency - love/healing
-  waves: { freq: 432, pattern: [1000, 800], waveType: 'sine' },      // Natural frequency - calming
-  bells: { freq: 639, pattern: [500, 500], waveType: 'triangle' },   // Solfeggio frequency - connection
+const TONE_FREQUENCIES: Record<AlarmTone, { freq: number; pattern: number[]; waveType: OscillatorType; harmonics?: number[] }> = {
+  gentle: { freq: 396, pattern: [800, 600], waveType: 'sine' },
+  melody: { freq: 528, pattern: [600, 400], waveType: 'sine' },
+  waves: { freq: 432, pattern: [1000, 800], waveType: 'sine' },
+  bells: { freq: 639, pattern: [500, 500], waveType: 'triangle' },
+  melodic: { freq: 440, pattern: [1200, 400], waveType: 'sine', harmonics: [554.37, 659.25, 880] },
 };
 
 export const useAlarm = (initialSettings?: Partial<AlarmSettings>) => {
@@ -49,6 +50,8 @@ export const useAlarm = (initialSettings?: Partial<AlarmSettings>) => {
     }));
   }, []);
 
+  const harmonicOscillatorsRef = useRef<OscillatorNode[]>([]);
+
   const createAlarmSound = useCallback(() => {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -61,24 +64,38 @@ export const useAlarm = (initialSettings?: Partial<AlarmSettings>) => {
     }
 
     const toneConfig = TONE_FREQUENCIES[state.settings.tone];
-
-    // Create oscillator for alarm
-    const oscillator = ctx.createOscillator();
     const gainNode = ctx.createGain();
-
-    oscillator.type = TONE_FREQUENCIES[state.settings.tone].waveType;
-    oscillator.frequency.value = toneConfig.freq;
     gainNode.gain.value = 0;
-
-    oscillator.connect(gainNode);
     gainNode.connect(ctx.destination);
+
+    // Main oscillator
+    const oscillator = ctx.createOscillator();
+    oscillator.type = toneConfig.waveType;
+    oscillator.frequency.value = toneConfig.freq;
+    oscillator.connect(gainNode);
+    oscillator.start();
+
+    // Add harmonics for richer melodic tones
+    const harmonicOscs: OscillatorNode[] = [];
+    if (toneConfig.harmonics) {
+      toneConfig.harmonics.forEach((harmFreq, i) => {
+        const harmOsc = ctx.createOscillator();
+        const harmGain = ctx.createGain();
+        harmOsc.type = 'sine';
+        harmOsc.frequency.value = harmFreq;
+        harmGain.gain.value = 0;
+        harmOsc.connect(harmGain);
+        harmGain.connect(ctx.destination);
+        harmOsc.start();
+        harmonicOscs.push(harmOsc);
+      });
+    }
 
     oscillatorRef.current = oscillator;
     gainNodeRef.current = gainNode;
+    harmonicOscillatorsRef.current = harmonicOscs;
 
-    oscillator.start();
-
-    return { oscillator, gainNode, ctx, toneConfig };
+    return { oscillator, gainNode, ctx, toneConfig, harmonicOscs };
   }, [state.settings.tone]);
 
   const triggerAlarm = useCallback(() => {
@@ -131,6 +148,11 @@ export const useAlarm = (initialSettings?: Partial<AlarmSettings>) => {
       oscillatorRef.current.disconnect();
       oscillatorRef.current = null;
     }
+
+    harmonicOscillatorsRef.current.forEach(osc => {
+      try { osc.stop(); osc.disconnect(); } catch {}
+    });
+    harmonicOscillatorsRef.current = [];
 
     if (gainNodeRef.current) {
       gainNodeRef.current.disconnect();

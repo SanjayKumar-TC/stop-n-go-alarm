@@ -27,6 +27,8 @@ const TONE_OPTIONS: { value: AlarmTone; label: string; description: string }[] =
   { value: 'gentle', label: 'Gentle', description: 'Soft, calming wake-up tone' },
   { value: 'melody', label: 'Melody', description: 'Soothing harmonic sound' },
   { value: 'waves', label: 'Waves', description: 'Relaxing, flowing rhythm' },
+  { value: 'bells', label: 'Bells', description: 'Warm, resonant bell chime' },
+  { value: 'melodic', label: 'Melodic', description: 'Rich multi-harmonic ringtone' },
 ];
 
 export const SettingsScreen = ({
