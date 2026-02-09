@@ -144,6 +144,65 @@
     background: var(--gradient-panel);
     backdrop-filter: blur(20px);
     box-shadow: var(--shadow-panel);
+    transition: border-radius 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                border 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .design-card {
+    box-shadow: var(--design-shadow, 0 4px 12px rgba(0,0,0,0.08));
+    transition: border-radius 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                border 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                backdrop-filter 0.3s ease;
+  }
+
+  /* Glass design - frosted backdrop */
+  .design-glass .glass-panel,
+  .design-glass .design-card {
+    backdrop-filter: blur(24px) saturate(1.8);
+    -webkit-backdrop-filter: blur(24px) saturate(1.8);
+    border: 1px solid hsl(var(--border) / 0.3);
+  }
+
+  /* Soft/Neumorphic design */
+  .design-soft .glass-panel,
+  .design-soft .design-card {
+    box-shadow: 4px 4px 10px rgba(0,0,0,0.1), -4px -4px 10px rgba(255,255,255,0.7);
+  }
+  .dark .design-soft .glass-panel,
+  .dark .design-soft .design-card {
+    box-shadow: 4px 4px 10px rgba(0,0,0,0.4), -4px -4px 10px rgba(255,255,255,0.05);
+  }
+
+  /* Brutalist design */
+  .design-brutalist .glass-panel,
+  .design-brutalist .design-card {
+    border: 3px solid hsl(var(--foreground));
+    box-shadow: 4px 4px 0 hsl(var(--foreground));
+    backdrop-filter: none;
+  }
+
+  /* Neon design */
+  .design-neon .glass-panel,
+  .design-neon .design-card {
+    border: 1px solid hsl(var(--primary));
+    box-shadow: 0 0 12px hsl(var(--primary) / 0.3), 0 0 4px hsl(var(--primary) / 0.2), inset 0 0 12px hsl(var(--primary) / 0.05);
+  }
+
+  /* Retro design */
+  .design-retro .glass-panel,
+  .design-retro .design-card {
+    border: 2px solid hsl(var(--foreground));
+    box-shadow: 3px 3px 0 hsl(var(--foreground));
+    font-family: 'Courier New', monospace;
+  }
+
+  /* Minimal design */
+  .design-minimal .glass-panel,
+  .design-minimal .design-card {
+    box-shadow: none;
+    backdrop-filter: none;
   }
 
   .glow-primary {
