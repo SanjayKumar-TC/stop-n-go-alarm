@@ -60,7 +60,7 @@ export const TripHistory = ({
 
   if (safeTrips.length === 0) {
     return (
-      <div className="glass-panel design-card rounded-xl p-4">
+      <div className="glass-panel rounded-xl p-4">
         <div className="flex items-center gap-2 mb-3">
           <History className="w-4 h-4 text-primary" />
           <h3 className="text-sm font-semibold text-foreground">Trip History</h3>
@@ -85,7 +85,7 @@ export const TripHistory = ({
   }, {} as Record<string, Trip[]>);
 
   return (
-    <div className="glass-panel design-card rounded-xl p-4">
+    <div className="glass-panel rounded-xl p-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <History className="w-4 h-4 text-primary" />

@@ -31,7 +31,7 @@ export const ControlPanel = ({
   const isWithinAlertZone = distanceToDestination !== null && distanceToDestination <= alertRadius;
 
   return (
-    <div className="glass-panel design-card absolute bottom-0 left-0 right-0 rounded-t-3xl p-6 pb-8 animate-slide-up">
+    <div className="glass-panel absolute bottom-0 left-0 right-0 rounded-t-3xl p-6 pb-8 animate-slide-up">
       {/* Alarm ringing overlay */}
       {isAlarmRinging && (
         <div className="absolute inset-0 rounded-t-3xl bg-destructive/20 pointer-events-none pulse-alert" />
@@ -76,7 +76,7 @@ export const ControlPanel = ({
 
         {/* Proximity warning */}
         {isWithinAlertZone && !isAlarmRinging && (
-          <div className="flex items-center gap-2 p-3 bg-warning/20 rounded-xl border border-warning/30 design-card">
+          <div className="flex items-center gap-2 p-3 bg-warning/20 rounded-xl border border-warning/30">
             <AlertTriangle className="w-5 h-5 text-warning" />
             <p className="text-sm font-medium text-warning">You're approaching your destination!</p>
           </div>
@@ -150,7 +150,7 @@ export const ControlPanel = ({
 
         {/* Instructions when no destination */}
         {!destination && (
-          <div className="flex items-center justify-center gap-3 py-4 px-4 bg-muted/50 rounded-xl design-card">
+          <div className="flex items-center justify-center gap-3 py-4 px-4 bg-muted/50 rounded-xl">
             <MapPin className="w-5 h-5 text-primary flex-shrink-0" />
             <p className="text-sm text-muted-foreground text-center">
               Tap anywhere on the map to set your destination stop

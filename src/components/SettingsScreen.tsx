@@ -5,7 +5,6 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { useTheme } from '@/hooks/useTheme';
 import { useUITheme, UI_THEME_OPTIONS } from '@/hooks/useUITheme';
-import { useUIDesign, UI_DESIGN_OPTIONS } from '@/hooks/useUIDesign';
 import { AlarmSettings, AlarmTone } from '@/hooks/useAlarm';
 import { BatteryOptimizationGuide } from '@/components/BatteryOptimizationGuide';
 import {
@@ -27,8 +26,6 @@ const TONE_OPTIONS: { value: AlarmTone; label: string; description: string }[] =
   { value: 'gentle', label: 'Gentle', description: 'Soft, calming wake-up tone' },
   { value: 'melody', label: 'Melody', description: 'Soothing harmonic sound' },
   { value: 'waves', label: 'Waves', description: 'Relaxing, flowing rhythm' },
-  { value: 'bells', label: 'Bells', description: 'Warm, resonant bell chime' },
-  { value: 'melodic', label: 'Melodic', description: 'Rich multi-harmonic ringtone' },
 ];
 
 export const SettingsScreen = ({
@@ -40,7 +37,6 @@ export const SettingsScreen = ({
 }: SettingsScreenProps) => {
   const { theme, setTheme } = useTheme();
   const { uiTheme, setUITheme } = useUITheme();
-  const { uiDesign, setUIDesign } = useUIDesign();
   const [showBatteryGuide, setShowBatteryGuide] = useState(false);
 
   // Show battery optimization guide
@@ -49,7 +45,6 @@ export const SettingsScreen = ({
   }
 
   const currentUITheme = UI_THEME_OPTIONS.find(t => t.id === uiTheme) || UI_THEME_OPTIONS[0];
-  const currentUIDesign = UI_DESIGN_OPTIONS.find(d => d.id === uiDesign) || UI_DESIGN_OPTIONS[0];
 
   return (
     <div className="min-h-screen bg-background">
@@ -74,7 +69,7 @@ export const SettingsScreen = ({
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Appearance
           </h2>
-          <div className="glass-panel design-card rounded-xl divide-y divide-border">
+          <div className="glass-panel rounded-xl divide-y divide-border">
             <button
               onClick={() => setTheme('light')}
               className={`w-full flex items-center justify-between p-4 transition-colors ${
@@ -125,13 +120,10 @@ export const SettingsScreen = ({
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Color Theme
           </h2>
-          <div className="glass-panel design-card rounded-xl">
-            <DropdownMenu modal={false}>
+          <div className="glass-panel rounded-xl">
+            <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button 
-                  className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted/50 touch-manipulation"
-                  onTouchStart={(e) => e.stopPropagation()}
-                >
+                <button className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted/50">
                   <div className="flex items-center gap-3">
                     <div 
                       className="w-5 h-5 rounded-full border-2 border-background shadow-sm"
@@ -146,10 +138,8 @@ export const SettingsScreen = ({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent 
-                align="start" 
-                side="bottom"
-                sideOffset={4}
-                className="w-80 bg-background border border-border shadow-lg z-[100] max-h-[60vh] overflow-y-auto"
+                align="end" 
+                className="w-80 bg-background border border-border shadow-lg z-[100] max-h-[70vh] overflow-y-auto"
               >
                 {UI_THEME_OPTIONS.map((themeOption) => (
                   <DropdownMenuItem
@@ -222,112 +212,12 @@ export const SettingsScreen = ({
           </div>
         </section>
 
-        {/* UI Design Section */}
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-            UI Design
-          </h2>
-          <div className="glass-panel design-card rounded-xl">
-            <DropdownMenu modal={false}>
-              <DropdownMenuTrigger asChild>
-                <button 
-                  className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted/50 touch-manipulation"
-                  onTouchStart={(e) => e.stopPropagation()}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded border-2 border-primary bg-muted flex items-center justify-center">
-                      <div 
-                        className="w-3 h-3 bg-primary"
-                        style={{ borderRadius: currentUIDesign.id === 'sharp' ? '2px' : currentUIDesign.id === 'rounded' ? '6px' : '4px' }}
-                      />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-foreground">{currentUIDesign.label}</p>
-                      <p className="text-xs text-muted-foreground">{currentUIDesign.description}</p>
-                    </div>
-                  </div>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                align="start" 
-                side="bottom"
-                sideOffset={4}
-                className="w-80 bg-background border border-border shadow-lg z-[100] max-h-[60vh] overflow-y-auto"
-              >
-                {UI_DESIGN_OPTIONS.map((designOption) => (
-                  <DropdownMenuItem
-                    key={designOption.id}
-                    onClick={() => setUIDesign(designOption.id)}
-                    className={`flex flex-col gap-2 p-3 cursor-pointer ${
-                      uiDesign === designOption.id ? 'bg-primary/10' : ''
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 w-full">
-                      <div className="w-5 h-5 rounded border-2 border-muted-foreground/30 bg-muted flex items-center justify-center flex-shrink-0">
-                        <div 
-                          className="w-3 h-3 bg-primary"
-                          style={{ borderRadius: designOption.id === 'sharp' ? '2px' : designOption.id === 'rounded' ? '6px' : '4px' }}
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-foreground text-sm font-medium">{designOption.label}</p>
-                        <p className="text-xs text-muted-foreground">{designOption.description}</p>
-                      </div>
-                      {uiDesign === designOption.id && (
-                        <div className="w-2 h-2 rounded-full bg-primary" />
-                      )}
-                    </div>
-                    {/* Live Preview Panel */}
-                    <div 
-                      className="w-full border border-border p-2 mt-1"
-                      style={{ 
-                        borderRadius: designOption.borderRadius,
-                        boxShadow: designOption.shadowStyle !== 'none' ? designOption.shadowStyle : undefined,
-                        background: designOption.panelStyle === 'glass' 
-                          ? 'rgba(255, 255, 255, 0.1)' 
-                          : designOption.panelStyle === 'neumorphic'
-                          ? 'linear-gradient(145deg, #f0f0f0, #cacaca)'
-                          : undefined
-                      }}
-                    >
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {/* Button Preview */}
-                        <div 
-                          className="px-3 py-1 text-xs font-medium text-white bg-primary"
-                          style={{ borderRadius: designOption.borderRadius }}
-                        >
-                          Button
-                        </div>
-                        {/* Card Preview */}
-                        <div 
-                          className="px-2 py-1 text-[10px] border border-border bg-card text-foreground"
-                          style={{ borderRadius: designOption.borderRadius }}
-                        >
-                          Card
-                        </div>
-                        {/* Input Preview */}
-                        <div 
-                          className="px-2 py-1 text-[10px] border border-input bg-background text-muted-foreground"
-                          style={{ borderRadius: designOption.borderRadius }}
-                        >
-                          Input
-                        </div>
-                      </div>
-                    </div>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </section>
-
         {/* Alarm Section */}
         <section className="space-y-3">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Alarm
           </h2>
-          <div className="glass-panel design-card rounded-xl divide-y divide-border">
+          <div className="glass-panel rounded-xl divide-y divide-border">
             {/* Sound Toggle */}
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
@@ -390,7 +280,7 @@ export const SettingsScreen = ({
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               Alarm Tone
             </h2>
-            <div className="glass-panel design-card rounded-xl divide-y divide-border">
+            <div className="glass-panel rounded-xl divide-y divide-border">
               {TONE_OPTIONS.map((tone) => (
                 <button
                   key={tone.value}
@@ -442,7 +332,7 @@ export const SettingsScreen = ({
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Background Operation
           </h2>
-          <div className="glass-panel design-card rounded-xl p-4">
+          <div className="glass-panel rounded-xl p-4">
             <div className="flex items-start gap-3">
               <div className="p-2 rounded-lg bg-warning/20 flex-shrink-0">
                 <Battery className="w-5 h-5 text-warning" />
