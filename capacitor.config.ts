@@ -4,7 +4,6 @@ const config: CapacitorConfig = {
   appId: 'com.stopngo.alarm',
   appName: 'Travel Alarm',
   webDir: 'dist',
-  bundledWebRuntime: false,
 
   plugins: {
     LocalNotifications: {
@@ -18,7 +17,7 @@ const config: CapacitorConfig = {
   },
 
   android: {
-    allowMixedContent: true,
+    allowMixedContent: false,
   },
 
   ios: {
