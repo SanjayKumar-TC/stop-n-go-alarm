@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { ArrowLeft, Sun, Moon, Monitor, Bell, BellOff, Vibrate, Volume2, VolumeX, Play, Battery, HelpCircle, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Sun, Moon, Monitor, Bell, BellOff, Vibrate, Volume2, VolumeX, Play, Battery, HelpCircle, ChevronDown, Paintbrush } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { useTheme } from '@/hooks/useTheme';
 import { useUITheme, UI_THEME_OPTIONS } from '@/hooks/useUITheme';
+import { useDesignTheme, DESIGN_THEME_OPTIONS } from '@/hooks/useDesignTheme';
 import { AlarmSettings, AlarmTone } from '@/hooks/useAlarm';
 import { BatteryOptimizationGuide } from '@/components/BatteryOptimizationGuide';
 import {
@@ -37,6 +38,7 @@ export const SettingsScreen = ({
 }: SettingsScreenProps) => {
   const { theme, setTheme } = useTheme();
   const { uiTheme, setUITheme } = useUITheme();
+  const { designTheme, setDesignTheme } = useDesignTheme();
   const [showBatteryGuide, setShowBatteryGuide] = useState(false);
 
   // Show battery optimization guide
@@ -45,6 +47,7 @@ export const SettingsScreen = ({
   }
 
   const currentUITheme = UI_THEME_OPTIONS.find(t => t.id === uiTheme) || UI_THEME_OPTIONS[0];
+  const currentDesign = DESIGN_THEME_OPTIONS.find(d => d.id === designTheme) || DESIGN_THEME_OPTIONS[0];
 
   return (
     <div className="min-h-screen bg-background">
@@ -202,6 +205,92 @@ export const SettingsScreen = ({
                           >
                             <div className="w-3 h-3 rounded-full bg-white ml-auto" />
                           </div>
+                        </div>
+                      </div>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </section>
+
+        {/* Design Theme Section */}
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+            UI Design
+          </h2>
+          <div className="glass-panel rounded-xl">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted/50">
+                  <div className="flex items-center gap-3">
+                    <Paintbrush className="w-5 h-5 text-primary" />
+                    <div className="text-left">
+                      <p className="text-foreground">{currentDesign.label}</p>
+                      <p className="text-xs text-muted-foreground">{currentDesign.description}</p>
+                    </div>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                align="end" 
+                className="w-80 bg-background border border-border shadow-lg z-[100] max-h-[70vh] overflow-y-auto"
+              >
+                {DESIGN_THEME_OPTIONS.map((option) => (
+                  <DropdownMenuItem
+                    key={option.id}
+                    onClick={() => setDesignTheme(option.id)}
+                    className={`flex flex-col gap-2 p-3 cursor-pointer ${
+                      designTheme === option.id ? 'bg-primary/10' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="flex-1">
+                        <p className="text-foreground text-sm font-medium">{option.label}</p>
+                        <p className="text-xs text-muted-foreground">{option.description}</p>
+                      </div>
+                      {designTheme === option.id && (
+                        <div className="w-2 h-2 rounded-full bg-primary" />
+                      )}
+                    </div>
+                    {/* Design Preview */}
+                    <div className="w-full rounded-lg border border-border bg-muted/30 p-2 mt-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {/* Card preview */}
+                        <div 
+                          className="px-3 py-1.5 text-xs font-medium text-foreground"
+                          style={{
+                            borderRadius: option.previewStyles.borderRadius,
+                            border: option.previewStyles.border,
+                            boxShadow: option.previewStyles.shadow,
+                            fontFamily: option.previewStyles.fontStyle || 'inherit',
+                          }}
+                        >
+                          Card
+                        </div>
+                        {/* Button preview */}
+                        <div 
+                          className="px-3 py-1 text-xs font-medium text-primary-foreground bg-primary"
+                          style={{
+                            borderRadius: option.previewStyles.borderRadius,
+                            boxShadow: option.id === 'brutalist' || option.id === 'retro' ? option.previewStyles.shadow : 'none',
+                            fontFamily: option.previewStyles.fontStyle || 'inherit',
+                          }}
+                        >
+                          Button
+                        </div>
+                        {/* Input preview */}
+                        <div 
+                          className="px-3 py-1 text-xs text-muted-foreground bg-background flex-1 min-w-[60px]"
+                          style={{
+                            borderRadius: option.previewStyles.borderRadius,
+                            border: option.previewStyles.border,
+                            fontFamily: option.previewStyles.fontStyle || 'inherit',
+                          }}
+                        >
+                          Input...
                         </div>
                       </div>
                     </div>
