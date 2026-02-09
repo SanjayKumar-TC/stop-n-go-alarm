@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { ArrowLeft, Sun, Moon, Monitor, Bell, BellOff, Vibrate, Volume2, VolumeX, Play, Battery, HelpCircle, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Sun, Moon, Monitor, Bell, BellOff, Vibrate, Volume2, VolumeX, Play, Battery, HelpCircle, ChevronDown, Palette, Layout } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { useTheme } from '@/hooks/useTheme';
 import { useUITheme, UI_THEME_OPTIONS } from '@/hooks/useUITheme';
+import { useDesignTheme, DESIGN_THEME_OPTIONS } from '@/hooks/useDesignTheme';
 import { AlarmSettings, AlarmTone } from '@/hooks/useAlarm';
 import { BatteryOptimizationGuide } from '@/components/BatteryOptimizationGuide';
 import {
@@ -37,6 +38,7 @@ export const SettingsScreen = ({
 }: SettingsScreenProps) => {
   const { theme, setTheme } = useTheme();
   const { uiTheme, setUITheme } = useUITheme();
+  const { designTheme, setDesignTheme } = useDesignTheme();
   const [showBatteryGuide, setShowBatteryGuide] = useState(false);
 
   // Show battery optimization guide
@@ -69,7 +71,7 @@ export const SettingsScreen = ({
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Appearance
           </h2>
-          <div className="glass-panel rounded-xl divide-y divide-border">
+          <div className="glass-panel design-card rounded-xl divide-y divide-border">
             <button
               onClick={() => setTheme('light')}
               className={`w-full flex items-center justify-between p-4 transition-colors ${
@@ -120,7 +122,7 @@ export const SettingsScreen = ({
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Color Theme
           </h2>
-          <div className="glass-panel rounded-xl">
+          <div className="glass-panel design-card rounded-xl">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted/50">
@@ -212,7 +214,93 @@ export const SettingsScreen = ({
           </div>
         </section>
 
-        {/* Alarm Section */}
+        {/* Design Theme Section */}
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+            Design Style
+          </h2>
+          <div className="glass-panel rounded-xl">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted/50">
+                  <div className="flex items-center gap-3">
+                    <Layout className="w-5 h-5 text-primary" />
+                    <div className="text-left">
+                      <p className="text-foreground">{DESIGN_THEME_OPTIONS.find(d => d.id === designTheme)?.label}</p>
+                      <p className="text-xs text-muted-foreground">{DESIGN_THEME_OPTIONS.find(d => d.id === designTheme)?.description}</p>
+                    </div>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                align="end" 
+                className="w-80 bg-background border border-border shadow-lg z-[100] max-h-[70vh] overflow-y-auto"
+              >
+                {DESIGN_THEME_OPTIONS.map((designOption) => (
+                  <DropdownMenuItem
+                    key={designOption.id}
+                    onClick={() => setDesignTheme(designOption.id)}
+                    className={`flex flex-col gap-2 p-3 cursor-pointer ${
+                      designTheme === designOption.id ? 'bg-primary/10' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="flex-1">
+                        <p className="text-foreground text-sm font-medium">{designOption.label}</p>
+                        <p className="text-xs text-muted-foreground">{designOption.description}</p>
+                      </div>
+                      {designTheme === designOption.id && (
+                        <div className="w-2 h-2 rounded-full bg-primary" />
+                      )}
+                    </div>
+                    {/* Design Preview */}
+                    <div 
+                      className="w-full p-3 mt-1"
+                      style={{
+                        borderRadius: designOption.previewStyle.radius,
+                        border: designOption.previewStyle.border,
+                        boxShadow: designOption.previewStyle.shadow,
+                        background: designOption.previewStyle.bg,
+                        fontFamily: designOption.previewStyle.font || 'inherit',
+                      }}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-3 h-3 rounded-full bg-primary" />
+                        <span className="text-xs font-medium text-foreground">Preview Card</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <div 
+                          className="px-3 py-1 text-xs font-medium text-primary-foreground bg-primary"
+                          style={{ 
+                            borderRadius: designOption.id === 'rounded' ? '12px' : designOption.id === 'sharp' || designOption.id === 'brutalist' || designOption.id === 'retro' ? '0' : '6px',
+                            fontFamily: designOption.previewStyle.font || 'inherit',
+                            fontWeight: designOption.id === 'brutalist' ? 800 : 500,
+                            textTransform: designOption.id === 'brutalist' ? 'uppercase' : 'none',
+                            letterSpacing: designOption.id === 'brutalist' ? '0.05em' : 'normal',
+                            boxShadow: designOption.id === 'neon' ? '0 0 8px hsl(var(--primary) / 0.4)' : 'none',
+                          } as React.CSSProperties}
+                        >
+                          Button
+                        </div>
+                        <div 
+                          className="px-3 py-1 text-xs bg-muted text-muted-foreground"
+                          style={{ 
+                            borderRadius: designOption.id === 'rounded' ? '12px' : designOption.id === 'sharp' || designOption.id === 'brutalist' || designOption.id === 'retro' ? '0' : '6px',
+                            fontFamily: designOption.previewStyle.font || 'inherit',
+                          }}
+                        >
+                          Secondary
+                        </div>
+                      </div>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </section>
+
         <section className="space-y-3">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Alarm
